@@ -2606,9 +2606,9 @@ NOVA PLAYLIST
 CONFIGURAÇÃO
 ========================================= */
 
-const SUPABASE_URL="";
+const SUPABASE_URL="https://gnibzbnypirjrcaoibkx.supabase.co";
 
-const SUPABASE_ANON_KEY="";
+const SUPABASE_ANON_KEY="sb_publishable_b9yvSbmWOLVJvq4AB4CLmQ_VRuzpG5T";
 
 
 let db=null;
@@ -2618,6 +2618,9 @@ let musicas=[];
 let artistas=[];
 
 let barras=[];
+let musicaArtistas=[];
+let projetos=[];
+let projetoMusicas=[];
 
 let indiceAtual=-1;
 
@@ -2711,11 +2714,7 @@ function init(){
         );
 
 
-        carregarArtistas();
-
-        carregarMusicas();
-
-        carregarBarras();
+        carregarDadosUnderFy();
 
     }
 
@@ -3677,72 +3676,94 @@ CARREGAR ARTISTAS
 
 async function carregarArtistas(){
 
-    if(!db)
+    if(!db) return;
+
+    const r=await db.from('artistas').select('*').order('nome',{ascending:true});
+
+    if(r.error){
+        console.error('Erro ao carregar artistas:',r.error);
         return;
-
-
-    let r=
-    await db
-    .from('artistas')
-    .select('*')
-    .order(
-        'nome',
-        {ascending:true}
-    );
-
-
-    if(r.error)
-        return;
-
+    }
 
     artistas=r.data||[];
-
-
-    let el=
-    document.getElementById('artistas');
-
-
-    el.innerHTML=
-    artistas.map(a=>`
-
-        <div class="artist">
-
-            <img
-                src="${esc(a.foto_url||PH)}"
-                onerror="this.src='${PH}'">
-
-
-            <b>
-
-                ${esc(a.nome)}
-
-                <span class="badge">
-                    ✓
-                </span>
-
-            </b>
-
-        </div>
-
-    `).join('');
-
-
-    icones();
-
+    renderizarArtistas();
 }
 
+function renderizarArtistas(){
+    const el=document.getElementById('artistas');
+    if(!el) return;
+
+    el.innerHTML=artistas.map(a=>`
+        <div class="artist">
+            <img src="${esc(a.foto_url||PH)}" onerror="this.src='${PH}'">
+            <b>${esc(a.nome||'Artista UnderFy')} <span class="badge">✓</span></b>
+        </div>
+    `).join('');
+    icones();
+}
+
+function artistasDaMusica(musica){
+    const rels=musicaArtistas.filter(r=>String(r.musica_id)===String(musica.id));
+    const nomes=rels.map(r=>artistas.find(a=>String(a.id)===String(r.artista_id))?.nome).filter(Boolean);
+    if(nomes.length) return nomes.join(' feat. ');
+    return encontrarArtista(musica.artista_id);
+}
 
 function encontrarArtista(id){
+    const a=artistas.find(x=>String(x.id)===String(id));
+    return a?.nome||'Artista UnderFy';
+}
 
-    let a=
-    artistas.find(
-        x=>String(x.id)===String(id)
-    );
+async function carregarDadosUnderFy(){
+    if(!db) return;
 
+    try{
+        const [a,m,r,p,pm,b] = await Promise.all([
+            db.from('artistas').select('*').order('nome',{ascending:true}),
+            db.from('musicas').select('*').order('created_at',{ascending:false}).limit(100),
+            db.from('musica_artistas').select('*'),
+            db.from('projetos').select('*').order('created_at',{ascending:false}),
+            db.from('projeto_musicas').select('*'),
+            db.from('barras').select('*').order('created_at',{ascending:false}).limit(50)
+        ]);
 
-    return a?.nome||
-           'Artista UnderFy';
+        if(a.error) console.error('Erro artistas:',a.error);
+        if(m.error) console.error('Erro músicas:',m.error);
+        if(r.error) console.error('Erro relações música/artista:',r.error);
+        if(p.error) console.error('Erro projetos:',p.error);
+        if(pm.error) console.error('Erro projeto_musicas:',pm.error);
+        if(b.error) console.error('Erro BARRAS:',b.error);
 
+        artistas=a.data||[];
+        musicas=m.data||[];
+        musicaArtistas=r.data||[];
+        projetos=p.data||[];
+        projetoMusicas=pm.data||[];
+        barras=b.data||[];
+
+        renderizarArtistas();
+        renderizarMusicas();
+        renderizarProjetosUnderFy();
+        icones();
+    }catch(err){
+        console.error('Erro geral ao carregar UnderFy:',err);
+    }
+}
+
+function renderizarProjetosUnderFy(){
+    // Mantém compatibilidade com o layout atual: se não houver um container
+    // específico de projetos, os dados continuam disponíveis para busca/player.
+    const el=document.getElementById('projetos');
+    if(!el) return;
+
+    el.innerHTML=projetos.map(p=>{
+        const ids=projetoMusicas.filter(r=>String(r.projeto_id)===String(p.id)).map(r=>String(r.musica_id));
+        const qtd=ids.length;
+        return `<div class="project-card" data-project-id="${esc(p.id)}">
+            <img src="${esc(p.capa_url||p.capa||PH)}" onerror="this.src='${PH}'">
+            <div><b>${esc(p.nome||'Projeto')}</b><small>${qtd} ${qtd===1?'música':'músicas'}</small></div>
+        </div>`;
+    }).join('');
 }
 
 
@@ -3751,36 +3772,15 @@ CARREGAR MÚSICAS
 ========================================= */
 
 async function carregarMusicas(){
-
-    if(!db)
-        return;
-
-
-    let r=
-    await db
-    .from('musicas')
-    .select('*')
-    .order(
-        'created_at',
-        {ascending:false}
-    )
-    .limit(30);
-
-
-    if(r.error){
-
-        console.error(r.error);
-
-        return;
-
-    }
-
-
+    if(!db) return;
+    const r=await db.from('musicas').select('*').order('created_at',{ascending:false}).limit(100);
+    if(r.error){ console.error('Erro ao carregar músicas:',r.error); return; }
     musicas=r.data||[];
-
-
+    if(!musicaArtistas.length){
+        const rel=await db.from('musica_artistas').select('*');
+        musicaArtistas=rel.data||[];
+    }
     renderizarMusicas();
-
 }
 
 
@@ -3846,9 +3846,7 @@ function renderizarMusicas(){
 
                 <span>
                     ${esc(
-                        encontrarArtista(
-                            m.artista_id
-                        )
+                        artistasDaMusica(m)
                     )}
                 </span>
 
@@ -3949,9 +3947,7 @@ function tocarObjeto(m){
     document
     .getElementById('partist')
     .textContent=
-    encontrarArtista(
-        m.artista_id
-    );
+    artistasDaMusica(m);
 
 
     document
@@ -3981,9 +3977,7 @@ function tocarObjeto(m){
     document
     .getElementById('fullArtist')
     .textContent=
-    encontrarArtista(
-        m.artista_id
-    );
+    artistasDaMusica(m);
 
 
     document
@@ -4373,9 +4367,7 @@ function renderizarFila(){
 
                 <span>
                     ${esc(
-                        encontrarArtista(
-                            m.artista_id
-                        )
+                        artistasDaMusica(m)
                     )}
                 </span>
 
@@ -4488,9 +4480,7 @@ function pesquisar(valor){
                     ">
 
                     ${esc(
-                        encontrarArtista(
-                            m.artista_id
-                        )
+                        artistasDaMusica(m)
                     )}
 
                 </div>
