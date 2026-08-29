@@ -1,48 +1,3148 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<meta name="theme-color" content="#080808"><title>UnderFy — Ouvintes</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+
+<meta name="theme-color" content="#080808">
+
+<title>UTA • UnderFy</title>
+
 <style>
-:root{--bg:#080808;--s:#111;--s2:#191919;--line:#292929;--text:#fff;--muted:#888;--green:#9cff00;--cyan:#00e5ff;--purple:#8b5cf6;--nav:68px}*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100vh;overflow-x:hidden}button,input{font:inherit}button{border:0}a{text-decoration:none;color:inherit}.top{height:68px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(8,8,8,.94);backdrop-filter:blur(18px);border-bottom:1px solid #171717}.logo{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:900}.mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--green);color:#050505;font-size:13px}.actions{display:flex;gap:8px}.icon{width:40px;height:40px;border-radius:50%;background:var(--s2);color:#fff;display:grid;place-items:center;cursor:pointer}.app{padding-bottom:90px}main{width:min(1180px,100%);margin:auto;padding:22px 18px}.hero{min-height:275px;border:1px solid var(--line);border-radius:26px;padding:34px 25px;display:flex;align-items:flex-end;overflow:hidden;background:radial-gradient(circle at 85% 20%,rgba(156,255,0,.18),transparent 28%),radial-gradient(circle at 65% 80%,rgba(0,229,255,.1),transparent 30%),linear-gradient(135deg,#171717,#0b0b0b 70%)}.hero h1{font-size:clamp(34px,7vw,58px);line-height:.95;letter-spacing:-2.5px;margin:8px 0 14px}.eyebrow{color:var(--green);font-size:11px;letter-spacing:2px;font-weight:900}.hero p{color:#aaa;max-width:600px;line-height:1.5;font-size:14px}.hero-btn{margin-top:20px;padding:12px 18px;border-radius:24px;background:var(--green);color:#050505;font-weight:900;cursor:pointer}.section{margin-top:32px}.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.head h2{font-size:21px}.head button{background:none;color:#aaa;font-size:12px;cursor:pointer}.row{display:flex;gap:14px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}.row::-webkit-scrollbar{display:none}.story{min-width:76px;text-align:center;cursor:pointer}.ring{width:70px;height:70px;padding:3px;border-radius:50%;margin:auto;background:linear-gradient(135deg,var(--green),var(--cyan),var(--purple))}.ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid var(--bg)}.story small{display:block;margin-top:7px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist{min-width:150px;max-width:150px;cursor:pointer}.artist img{width:150px;height:150px;border-radius:50%;object-fit:cover;background:var(--s2);border:1px solid var(--line)}.artist b{display:block;margin-top:9px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#1d9bf0;color:#fff;font-size:9px;vertical-align:middle}.barra{min-width:285px;max-width:370px;background:var(--s);border:1px solid var(--line);border-radius:18px;padding:15px}.bhead{display:flex;align-items:center;gap:10px}.bhead img{width:42px;height:42px;border-radius:50%;object-fit:cover;cursor:pointer}.bauthor{min-width:0;flex:1;cursor:pointer}.bauthor b,.bauthor small{display:block}.bauthor b{font-size:13px}.bauthor small{font-size:10px;color:#666;margin-top:3px}.btext{margin-top:13px;color:#ddd;line-height:1.45;font-size:13px}.audio{width:100%;height:34px;margin-top:12px}.bactions{display:flex;gap:8px;margin-top:12px}.bactions button{background:#202020;color:#aaa;padding:7px 11px;border-radius:18px;font-size:11px;cursor:pointer}.tracks{display:flex;flex-direction:column;gap:8px}.track{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;cursor:pointer}.track:hover{background:var(--s)}.cover{width:54px;height:54px;border-radius:10px;object-fit:cover;background:#202020}.tinfo{min-width:0;flex:1}.tinfo b,.tinfo span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tinfo b{font-size:14px}.tinfo span{font-size:11px;color:#777;margin-top:4px}.play{width:38px;height:38px;border-radius:50%;background:#202020;color:#fff;cursor:pointer}.empty{padding:25px 16px;border:1px dashed #303030;border-radius:16px;color:#666;text-align:center;font-size:13px}.loading{color:#666;font-size:13px;padding:20px 0}.nav{position:fixed;left:0;right:0;bottom:0;height:68px;background:rgba(10,10,10,.97);backdrop-filter:blur(18px);border-top:1px solid var(--line);z-index:60;display:flex;align-items:center;justify-content:space-around}.nav button{background:none;color:#777;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px}.nav button.active{color:#fff}.nav i{font-style:normal;font-size:20px}.player{position:fixed;left:0;right:0;bottom:68px;height:72px;background:rgba(17,17,17,.98);border-top:1px solid var(--line);z-index:55;display:none;align-items:center;gap:10px;padding:8px 14px}.player.open{display:flex}.pcover{width:52px;height:52px;border-radius:9px;object-fit:cover}.pinfo{min-width:0;flex:1}.pinfo b,.pinfo span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pinfo b{font-size:12px}.pinfo span{font-size:10px;color:#777;margin-top:4px}.pbtn{width:40px;height:40px;border-radius:50%;background:#202020;color:#fff;cursor:pointer}.progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:#292929}.progress span{display:block;height:100%;width:0;background:var(--green)}.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);z-index:100;display:none;padding:20px}.overlay.open{display:block}.box{width:min(700px,100%);margin:45px auto;background:var(--s);border:1px solid var(--line);border-radius:20px;padding:15px}.search{display:flex;gap:8px}.search input{flex:1;background:#0b0b0b;border:1px solid var(--line);color:#fff;border-radius:12px;padding:13px;outline:none}.search button{width:44px;border-radius:12px;background:var(--green);cursor:pointer}.close{position:fixed;right:18px;top:18px;width:42px;height:42px;border-radius:50%;background:#222;color:#fff;cursor:pointer;z-index:120}.results{margin-top:14px;display:flex;flex-direction:column;gap:6px}.result{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;cursor:pointer}.result:hover{background:#191919}.result img{width:44px;height:44px;border-radius:50%;object-fit:cover}.profile{width:min(760px,100%);margin:25px auto;background:var(--s);border:1px solid var(--line);border-radius:24px;overflow:hidden}.pcover{height:170px;background:radial-gradient(circle at 80% 20%,rgba(156,255,0,.18),transparent 25%),linear-gradient(135deg,#1d1d1d,#090909)}.pbody{padding:0 20px 25px}.avatar{width:92px;height:92px;border-radius:50%;object-fit:cover;border:4px solid var(--s);margin-top:-46px;background:#202020}.pbody h2{font-size:25px;margin-top:10px}.meta{color:#777;font-size:12px;margin-top:5px}@media(min-width:800px){main{padding-bottom:50px}.nav{top:0;bottom:auto;height:68px;justify-content:flex-end;padding-right:25px;gap:12px;border-top:0;border-bottom:1px solid var(--line)}.nav button{flex-direction:row;min-width:80px;font-size:12px}.player{bottom:0}}
-</style></head>
+
+:root{
+    --bg:#080808;
+    --s:#111;
+    --s2:#191919;
+    --s3:#222;
+    --line:#292929;
+    --text:#fff;
+    --muted:#888;
+    --green:#9cff00;
+    --cyan:#00e5ff;
+    --purple:#8b5cf6;
+    --nav:70px;
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial,Helvetica,sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+}
+
+button,
+input{
+    font:inherit;
+}
+
+button{
+    border:0;
+}
+
+a{
+    text-decoration:none;
+    color:inherit;
+}
+
+/* =========================
+   TOPO
+========================= */
+
+.top{
+    height:68px;
+    position:sticky;
+    top:0;
+    z-index:50;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 18px;
+
+    background:rgba(8,8,8,.94);
+    backdrop-filter:blur(18px);
+
+    border-bottom:1px solid #171717;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    font-size:21px;
+    font-weight:900;
+    letter-spacing:-.5px;
+}
+
+.mark{
+    width:31px;
+    height:31px;
+
+    border-radius:9px;
+
+    display:grid;
+    place-items:center;
+
+    background:var(--green);
+    color:#050505;
+
+    font-size:12px;
+    font-weight:1000;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+}
+
+.icon{
+    width:40px;
+    height:40px;
+
+    border-radius:50%;
+
+    background:var(--s2);
+    color:#fff;
+
+    display:grid;
+    place-items:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.icon:hover{
+    background:#272727;
+    transform:scale(1.04);
+}
+
+/* =========================
+   CONTEÚDO
+========================= */
+
+.app{
+    padding-bottom:100px;
+}
+
+main{
+    width:min(1180px,100%);
+    margin:auto;
+    padding:20px 18px 50px;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero{
+    min-height:330px;
+
+    border:1px solid var(--line);
+    border-radius:28px;
+
+    padding:35px 26px;
+
+    display:flex;
+    align-items:flex-end;
+
+    overflow:hidden;
+
+    position:relative;
+
+    background:
+    radial-gradient(
+        circle at 85% 15%,
+        rgba(156,255,0,.22),
+        transparent 25%
+    ),
+    radial-gradient(
+        circle at 70% 90%,
+        rgba(0,229,255,.13),
+        transparent 30%
+    ),
+    linear-gradient(
+        135deg,
+        #1b1b1b,
+        #0b0b0b 70%
+    );
+}
+
+.hero:after{
+    content:"";
+
+    position:absolute;
+
+    width:300px;
+    height:300px;
+
+    right:-120px;
+    bottom:-130px;
+
+    border-radius:50%;
+
+    border:1px solid rgba(156,255,0,.12);
+    box-shadow:
+        0 0 0 40px rgba(156,255,0,.025),
+        0 0 0 80px rgba(156,255,0,.018);
+}
+
+.hero-content{
+    position:relative;
+    z-index:2;
+    max-width:700px;
+}
+
+.eyebrow{
+    color:var(--green);
+
+    font-size:11px;
+    letter-spacing:2.5px;
+
+    font-weight:900;
+}
+
+.hero h1{
+    font-size:clamp(38px,7vw,66px);
+
+    line-height:.92;
+
+    letter-spacing:-3px;
+
+    margin:10px 0 16px;
+}
+
+.hero p{
+    color:#aaa;
+
+    max-width:600px;
+
+    line-height:1.5;
+
+    font-size:14px;
+}
+
+.hero-actions{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+
+    margin-top:22px;
+}
+
+.hero-btn{
+    padding:13px 19px;
+
+    border-radius:25px;
+
+    background:var(--green);
+    color:#050505;
+
+    font-weight:900;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.hero-btn:hover{
+    transform:translateY(-2px);
+}
+
+.hero-secondary{
+    padding:13px 19px;
+
+    border-radius:25px;
+
+    background:#222;
+    color:#fff;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+    border:1px solid #333;
+}
+
+/* =========================
+   SEÇÕES
+========================= */
+
+.section{
+    margin-top:34px;
+}
+
+.head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin-bottom:15px;
+}
+
+.head h2{
+    font-size:21px;
+    letter-spacing:-.5px;
+}
+
+.head span{
+    color:#666;
+    font-size:11px;
+}
+
+.head button{
+    background:none;
+    color:#999;
+
+    font-size:12px;
+
+    cursor:pointer;
+}
+
+.head button:hover{
+    color:#fff;
+}
+
+/* =========================
+   CONTINUE OUVINDO
+========================= */
+
+.continue-row{
+    display:flex;
+    gap:12px;
+
+    overflow-x:auto;
+
+    scrollbar-width:none;
+
+    padding-bottom:5px;
+}
+
+.continue-row::-webkit-scrollbar{
+    display:none;
+}
+
+.continue-card{
+    min-width:245px;
+
+    background:linear-gradient(
+        135deg,
+        #181818,
+        #101010
+    );
+
+    border:1px solid var(--line);
+
+    border-radius:17px;
+
+    padding:12px;
+
+    display:flex;
+    align-items:center;
+
+    gap:11px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.continue-card:hover{
+    transform:translateY(-2px);
+    background:#1b1b1b;
+}
+
+.continue-cover{
+    width:58px;
+    height:58px;
+
+    border-radius:11px;
+
+    object-fit:cover;
+
+    background:#222;
+}
+
+.continue-info{
+    min-width:0;
+    flex:1;
+}
+
+.continue-info b,
+.continue-info span{
+    display:block;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.continue-info b{
+    font-size:13px;
+}
+
+.continue-info span{
+    color:#777;
+    font-size:11px;
+
+    margin-top:5px;
+}
+
+.mini-play{
+    width:34px;
+    height:34px;
+
+    border-radius:50%;
+
+    background:var(--green);
+    color:#050505;
+
+    cursor:pointer;
+
+    flex-shrink:0;
+}
+
+/* =========================
+   STORIES
+========================= */
+
+.row{
+    display:flex;
+    gap:15px;
+
+    overflow-x:auto;
+
+    padding:2px 2px 8px;
+
+    scrollbar-width:none;
+}
+
+.row::-webkit-scrollbar{
+    display:none;
+}
+
+.story{
+    min-width:76px;
+
+    text-align:center;
+
+    cursor:pointer;
+}
+
+.ring{
+    width:70px;
+    height:70px;
+
+    padding:3px;
+
+    border-radius:50%;
+
+    margin:auto;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--green),
+            var(--cyan),
+            var(--purple)
+        );
+}
+
+.ring img{
+    width:100%;
+    height:100%;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:3px solid var(--bg);
+
+    background:#222;
+}
+
+.story small{
+    display:block;
+
+    margin-top:7px;
+
+    color:#bbb;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+/* =========================
+   BARRAS
+========================= */
+
+.barra{
+    min-width:290px;
+    max-width:370px;
+
+    background:var(--s);
+
+    border:1px solid var(--line);
+
+    border-radius:18px;
+
+    padding:15px;
+}
+
+.bhead{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.bhead img{
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    cursor:pointer;
+}
+
+.bauthor{
+    min-width:0;
+    flex:1;
+
+    cursor:pointer;
+}
+
+.bauthor b,
+.bauthor small{
+    display:block;
+}
+
+.bauthor b{
+    font-size:13px;
+}
+
+.bauthor small{
+    font-size:10px;
+
+    color:#666;
+
+    margin-top:3px;
+}
+
+.btext{
+    margin-top:13px;
+
+    color:#ddd;
+
+    line-height:1.45;
+
+    font-size:13px;
+}
+
+.audio{
+    width:100%;
+    height:34px;
+
+    margin-top:12px;
+}
+
+.bactions{
+    display:flex;
+
+    gap:8px;
+
+    margin-top:12px;
+}
+
+.bactions button{
+    background:#202020;
+
+    color:#aaa;
+
+    padding:7px 11px;
+
+    border-radius:18px;
+
+    font-size:11px;
+
+    cursor:pointer;
+}
+
+.bactions button:hover{
+    color:#fff;
+    background:#292929;
+}
+
+/* =========================
+   ARTISTAS
+========================= */
+
+.artist{
+    min-width:150px;
+    max-width:150px;
+
+    cursor:pointer;
+}
+
+.artist img{
+    width:150px;
+    height:150px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    background:var(--s2);
+
+    border:1px solid var(--line);
+
+    transition:.25s;
+}
+
+.artist:hover img{
+    transform:scale(1.035);
+    border-color:#444;
+}
+
+.artist b{
+    display:block;
+
+    margin-top:9px;
+
+    font-size:14px;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.badge{
+    display:inline-grid;
+
+    place-items:center;
+
+    width:16px;
+    height:16px;
+
+    border-radius:50%;
+
+    background:#1d9bf0;
+
+    color:#fff;
+
+    font-size:9px;
+
+    vertical-align:middle;
+}
+
+/* =========================
+   MÚSICAS
+========================= */
+
+.tracks{
+    display:flex;
+    flex-direction:column;
+
+    gap:5px;
+}
+
+.track{
+    display:flex;
+    align-items:center;
+
+    gap:12px;
+
+    padding:10px;
+
+    border-radius:15px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.track:hover{
+    background:var(--s);
+}
+
+.cover{
+    width:55px;
+    height:55px;
+
+    border-radius:10px;
+
+    object-fit:cover;
+
+    background:#202020;
+
+    flex-shrink:0;
+}
+
+.tinfo{
+    min-width:0;
+    flex:1;
+}
+
+.tinfo b,
+.tinfo span{
+    display:block;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.tinfo b{
+    font-size:14px;
+}
+
+.tinfo span{
+    font-size:11px;
+
+    color:#777;
+
+    margin-top:4px;
+}
+
+.track-actions{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.like-btn,
+.play{
+    width:38px;
+    height:38px;
+
+    border-radius:50%;
+
+    background:#202020;
+
+    color:#aaa;
+
+    cursor:pointer;
+}
+
+.play{
+    color:#fff;
+}
+
+.like-btn:hover{
+    color:var(--green);
+}
+
+.play:hover{
+    background:var(--green);
+    color:#050505;
+}
+
+/* =========================
+   RECOMENDAÇÕES
+========================= */
+
+.recommend-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fill,minmax(150px,1fr));
+
+    gap:12px;
+}
+
+.recommend{
+    background:var(--s);
+
+    border:1px solid var(--line);
+
+    border-radius:17px;
+
+    padding:11px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.recommend:hover{
+    transform:translateY(-3px);
+    background:#171717;
+}
+
+.recommend img{
+    width:100%;
+    aspect-ratio:1;
+
+    object-fit:cover;
+
+    border-radius:12px;
+
+    background:#222;
+}
+
+.recommend b{
+    display:block;
+
+    font-size:13px;
+
+    margin-top:9px;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.recommend span{
+    display:block;
+
+    color:#777;
+
+    font-size:11px;
+
+    margin-top:4px;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+/* =========================
+   ESTADOS
+========================= */
+
+.empty{
+    padding:25px 16px;
+
+    border:1px dashed #303030;
+
+    border-radius:16px;
+
+    color:#666;
+
+    text-align:center;
+
+    font-size:13px;
+}
+
+.loading{
+    color:#666;
+
+    font-size:13px;
+
+    padding:20px 0;
+}
+
+/* =========================
+   NAVEGAÇÃO
+========================= */
+
+.nav{
+    position:fixed;
+
+    left:0;
+    right:0;
+    bottom:0;
+
+    height:70px;
+
+    background:rgba(10,10,10,.97);
+
+    backdrop-filter:blur(18px);
+
+    border-top:1px solid var(--line);
+
+    z-index:60;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-around;
+}
+
+.nav button{
+    background:none;
+
+    color:#777;
+
+    cursor:pointer;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:5px;
+
+    font-size:10px;
+}
+
+.nav button.active{
+    color:#fff;
+}
+
+.nav i{
+    font-style:normal;
+
+    font-size:19px;
+}
+
+/* =========================
+   PLAYER
+========================= */
+
+.player{
+    position:fixed;
+
+    left:10px;
+    right:10px;
+    bottom:78px;
+
+    height:72px;
+
+    background:rgba(24,24,24,.97);
+
+    backdrop-filter:blur(18px);
+
+    border:1px solid #333;
+
+    border-radius:17px;
+
+    z-index:55;
+
+    display:none;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:8px 12px;
+
+    box-shadow:0 12px 35px rgba(0,0,0,.4);
+}
+
+.player.open{
+    display:flex;
+}
+
+.pcover{
+    width:52px;
+    height:52px;
+
+    border-radius:9px;
+
+    object-fit:cover;
+
+    background:#222;
+}
+
+.pinfo{
+    min-width:0;
+    flex:1;
+}
+
+.pinfo b,
+.pinfo span{
+    display:block;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+.pinfo b{
+    font-size:12px;
+}
+
+.pinfo span{
+    font-size:10px;
+
+    color:#777;
+
+    margin-top:4px;
+}
+
+.pbtn{
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    background:var(--green);
+
+    color:#050505;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.pnext{
+    width:38px;
+    height:38px;
+
+    border-radius:50%;
+
+    background:#202020;
+
+    color:#fff;
+
+    cursor:pointer;
+}
+
+.progress{
+    position:absolute;
+
+    bottom:0;
+    left:12px;
+    right:12px;
+
+    height:2px;
+
+    background:#333;
+}
+
+.progress span{
+    display:block;
+
+    height:100%;
+
+    width:0;
+
+    background:var(--green);
+}
+
+/* =========================
+   BUSCA
+========================= */
+
+.overlay{
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.82);
+
+    backdrop-filter:blur(14px);
+
+    z-index:100;
+
+    display:none;
+
+    padding:20px;
+}
+
+.overlay.open{
+    display:block;
+}
+
+.box{
+    width:min(700px,100%);
+
+    margin:45px auto;
+
+    background:var(--s);
+
+    border:1px solid var(--line);
+
+    border-radius:20px;
+
+    padding:15px;
+}
+
+.search{
+    display:flex;
+
+    gap:8px;
+}
+
+.search input{
+    flex:1;
+
+    background:#0b0b0b;
+
+    border:1px solid var(--line);
+
+    color:#fff;
+
+    border-radius:12px;
+
+    padding:13px;
+
+    outline:none;
+}
+
+.search input:focus{
+    border-color:#444;
+}
+
+.search button{
+    width:70px;
+
+    border-radius:12px;
+
+    background:var(--green);
+
+    cursor:pointer;
+
+    font-weight:bold;
+}
+
+.close{
+    position:fixed;
+
+    right:18px;
+    top:18px;
+
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    background:#222;
+
+    color:#fff;
+
+    cursor:pointer;
+
+    z-index:120;
+}
+
+.results{
+    margin-top:14px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+}
+
+.result{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:10px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+}
+
+.result:hover{
+    background:#191919;
+}
+
+.result img{
+    width:44px;
+    height:44px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+}
+
+/* =========================
+   PERFIL
+========================= */
+
+.profile{
+    width:min(760px,100%);
+
+    margin:25px auto;
+
+    background:var(--s);
+
+    border:1px solid var(--line);
+
+    border-radius:24px;
+
+    overflow:hidden;
+}
+
+.pcover-profile{
+    height:170px;
+
+    background:
+        radial-gradient(
+            circle at 80% 20%,
+            rgba(156,255,0,.18),
+            transparent 25%
+        ),
+        linear-gradient(
+            135deg,
+            #1d1d1d,
+            #090909
+        );
+}
+
+.pbody{
+    padding:0 20px 25px;
+}
+
+.avatar{
+    width:92px;
+    height:92px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:4px solid var(--s);
+
+    margin-top:-46px;
+
+    background:#202020;
+}
+
+.pbody h2{
+    font-size:25px;
+
+    margin-top:10px;
+}
+
+.meta{
+    color:#777;
+
+    font-size:12px;
+
+    margin-top:5px;
+}
+
+/* =========================
+   DESKTOP
+========================= */
+
+@media(min-width:800px){
+
+    main{
+        padding-bottom:50px;
+    }
+
+    .nav{
+        top:0;
+        bottom:auto;
+
+        height:68px;
+
+        justify-content:flex-end;
+
+        padding-right:25px;
+
+        gap:12px;
+
+        border-top:0;
+        border-bottom:1px solid var(--line);
+    }
+
+    .nav button{
+        flex-direction:row;
+
+        min-width:85px;
+
+        font-size:12px;
+    }
+
+    .player{
+        left:18px;
+        right:18px;
+
+        bottom:15px;
+
+        max-width:760px;
+
+        margin:auto;
+    }
+
+    .recommend-grid{
+        grid-template-columns:
+            repeat(5,1fr);
+    }
+
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:500px){
+
+    main{
+        padding-left:13px;
+        padding-right:13px;
+    }
+
+    .hero{
+        min-height:360px;
+
+        padding:27px 21px;
+    }
+
+    .hero h1{
+        letter-spacing:-2px;
+    }
+
+    .recommend-grid{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+}
+
+</style>
+
+</head>
+
+
 <body>
+
+
 <div class="app">
-<header class="top"><a class="logo" href="#" onclick="topo();return false"><span class="mark">UF</span>UnderFy</a><div class="actions"><button class="icon" onclick="abrirBusca()">Buscar</button><button class="icon" onclick="abrirPerfilOuvinte()"></button></div></header>
+
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header class="top">
+
+    <a class="logo"
+       href="#"
+       onclick="topo();return false">
+
+        <span class="mark">UF</span>
+
+        UnderFy
+
+    </a>
+
+
+    <div class="actions">
+
+        <button
+            class="icon"
+            onclick="abrirBusca()">
+
+            🔎
+
+        </button>
+
+
+        <button
+            class="icon"
+            onclick="abrirPerfilOuvinte()">
+
+            👤
+
+        </button>
+
+    </div>
+
+</header>
+
+
+
 <main>
-<section class="hero"><div><div class="eyebrow">UNDERFY PARA OUVINTES</div><h1>O underground está aqui.</h1><p>Descubra artistas, músicas, BARRAS, Stories e projetos das sessões UnderFy. Acompanhe quem está fazendo acontecer.</p><button class="hero-btn" onclick="scrollToId('musicas')">Play Explorar agora</button></div></section>
-<section class="section"><div class="head"><h2> Stories</h2><button onclick="carregarStories()">Atualizar</button></div><div id="stories" class="row"><div class="loading">Carregando Stories...</div></div></section>
-<section class="section"><div class="head"><h2> BARRAS</h2><button onclick="carregarBarras()">Atualizar</button></div><div id="barras" class="row"><div class="loading">Carregando BARRAS...</div></div></section>
-<section class="section"><div class="head"><h2> Artistas</h2><button onclick="carregarArtistas()">Atualizar</button></div><div id="artistas" class="row"><div class="loading">Carregando artistas...</div></div></section>
-<section class="section" id="musicas"><div class="head"><h2> Últimas músicas</h2><button onclick="carregarMusicas()">Atualizar</button></div><div id="tracks" class="tracks"><div class="loading">Carregando músicas...</div></div></section>
+
+
+<!-- =========================
+     HERO
+========================= -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="eyebrow">
+            UNDERFY PARA OUVINTES
+        </div>
+
+        <h1>
+            O underground
+            está aqui.
+        </h1>
+
+        <p>
+            Descubra novos artistas, músicas,
+            BARRAS, Stories e projetos da cena.
+            Encontre seu próximo som favorito.
+        </p>
+
+
+        <div class="hero-actions">
+
+            <button
+                class="hero-btn"
+                onclick="scrollToId('musicas')">
+
+                ▶ Explorar músicas
+
+            </button>
+
+
+            <button
+                class="hero-secondary"
+                onclick="abrirBusca()">
+
+                🔎 Buscar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     CONTINUE OUVINDO
+========================= -->
+
+<section class="section">
+
+    <div class="head">
+
+        <h2>
+            Continue ouvindo
+        </h2>
+
+        <span>
+            Seu histórico
+        </span>
+
+    </div>
+
+
+    <div
+        id="continue"
+        class="continue-row">
+
+        <div class="empty">
+            Comece a ouvir músicas para
+            criar seu histórico.
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     STORIES
+========================= -->
+
+<section class="section">
+
+    <div class="head">
+
+        <h2>
+            Stories
+        </h2>
+
+        <button onclick="carregarStories()">
+            Atualizar
+        </button>
+
+    </div>
+
+
+    <div
+        id="stories"
+        class="row">
+
+        <div class="loading">
+            Carregando Stories...
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     LANÇAMENTOS
+========================= -->
+
+<section
+    class="section"
+    id="musicas">
+
+    <div class="head">
+
+        <h2>
+            Lançamentos recentes
+        </h2>
+
+        <button onclick="carregarMusicas()">
+            Atualizar
+        </button>
+
+    </div>
+
+
+    <div
+        id="tracks"
+        class="tracks">
+
+        <div class="loading">
+            Carregando músicas...
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     ARTISTAS
+========================= -->
+
+<section class="section">
+
+    <div class="head">
+
+        <h2>
+            Artistas
+        </h2>
+
+        <button onclick="carregarArtistas()">
+            Ver todos
+        </button>
+
+    </div>
+
+
+    <div
+        id="artistas"
+        class="row">
+
+        <div class="loading">
+            Carregando artistas...
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     BARRAS
+========================= -->
+
+<section class="section">
+
+    <div class="head">
+
+        <h2>
+            BARRAS
+        </h2>
+
+        <button onclick="carregarBarras()">
+            Atualizar
+        </button>
+
+    </div>
+
+
+    <div
+        id="barras"
+        class="row">
+
+        <div class="loading">
+            Carregando BARRAS...
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================
+     PARA VOCÊ
+========================= -->
+
+<section class="section">
+
+    <div class="head">
+
+        <h2>
+            Para você
+        </h2>
+
+        <span>
+            Descobertas
+        </span>
+
+    </div>
+
+
+    <div
+        id="recommend"
+        class="recommend-grid">
+
+        <div class="empty">
+            Suas recomendações
+            aparecerão aqui.
+        </div>
+
+    </div>
+
+</section>
+
+
 </main>
-<nav class="nav"><button class="active" onclick="topo()"><i>Início</i>Início</button><button onclick="abrirBusca()"><i>Buscar</i>Buscar</button><button onclick="scrollToId('musicas')"><i>Músicas</i>Biblioteca</button><button onclick="abrirPerfilOuvinte()"><i>Perfil</i>Perfil</button></nav>
+
+
+<!-- =========================
+     NAVEGAÇÃO
+========================= -->
+
+<nav class="nav">
+
+
+    <button
+        class="active"
+        onclick="topo()">
+
+        <i>⌂</i>
+
+        Início
+
+    </button>
+
+
+    <button
+        onclick="abrirBusca()">
+
+        <i>⌕</i>
+
+        Buscar
+
+    </button>
+
+
+    <button
+        onclick="scrollToId('musicas')">
+
+        <i>♫</i>
+
+        Músicas
+
+    </button>
+
+
+    <button
+        onclick="abrirPerfilOuvinte()">
+
+        <i>◯</i>
+
+        Perfil
+
+    </button>
+
+
+</nav>
+
+
+
+<!-- =========================
+     PLAYER
+========================= -->
+
+<div
+    id="player"
+    class="player">
+
+
+    <img
+        id="pcover"
+        class="pcover"
+        src="https://via.placeholder.com/200"
+        alt="Capa">
+
+
+    <div class="pinfo">
+
+        <b id="ptitle">
+            Nenhuma música
+        </b>
+
+        <span id="partist">
+            UnderFy
+        </span>
+
+    </div>
+
+
+    <button
+        class="pnext"
+        onclick="musicaAnterior()">
+
+        ⏮
+
+    </button>
+
+
+    <button
+        class="pbtn"
+        id="pplay"
+        onclick="togglePlay()">
+
+        ▶
+
+    </button>
+
+
+    <button
+        class="pnext"
+        onclick="proximaMusica()">
+
+        ⏭
+
+    </button>
+
+
+    <div class="progress">
+
+        <span id="prog"></span>
+
+    </div>
+
 </div>
-<div id="player" class="player"><img id="pcover" class="pcover" src="https://via.placeholder.com/200"><div class="pinfo"><b id="ptitle">Nenhuma música</b><span id="partist">UnderFy</span></div><button class="pbtn" id="pplay" onclick="togglePlay()">Play</button><div class="progress"><span id="prog"></span></div><audio id="audio"></audio></div>
-<div id="searchOverlay" class="overlay" onclick="fecharBusca(event)"><button class="close" onclick="fecharBusca()">X</button><div class="box" onclick="event.stopPropagation()"><div class="search"><input id="q" placeholder="Buscar artista, música..." oninput="pesquisar(this.value)"><button onclick="pesquisar(document.getElementById('q').value)">Buscar</button></div><div id="results" class="results"><div class="empty">Digite para buscar.</div></div></div></div>
-<div id="profileOverlay" class="overlay" onclick="fecharPerfil(event)"><button class="close" onclick="fecharPerfil()">X</button><div id="profile" class="profile" onclick="event.stopPropagation()"></div></div>
+
+
+
+<!-- =========================
+     BUSCA
+========================= -->
+
+<div
+    id="searchOverlay"
+    class="overlay"
+    onclick="fecharBusca(event)">
+
+
+    <button
+        class="close"
+        onclick="fecharBusca()">
+
+        ×
+
+    </button>
+
+
+    <div
+        class="box"
+        onclick="event.stopPropagation()">
+
+
+        <div class="search">
+
+            <input
+                id="q"
+                placeholder="Buscar artista, música..."
+                oninput="pesquisar(this.value)">
+
+
+            <button
+                onclick="pesquisar(document.getElementById('q').value)">
+
+                Buscar
+
+            </button>
+
+        </div>
+
+
+        <div
+            id="results"
+            class="results">
+
+            <div class="empty">
+                Digite para buscar.
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================
+     PERFIL
+========================= -->
+
+<div
+    id="profileOverlay"
+    class="overlay"
+    onclick="fecharPerfil(event)">
+
+
+    <button
+        class="close"
+        onclick="fecharPerfil()">
+
+        ×
+
+    </button>
+
+
+    <div
+        id="profile"
+        class="profile"
+        onclick="event.stopPropagation()">
+    </div>
+
+
+</div>
+
+
+
+<audio id="audio"></audio>
+
+
+
+<!-- =========================
+     SUPABASE
+========================= -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
 <script>
-/* CONEXÃO: use a mesma URL e a mesma chave publishable/anon do Supabase do site dos artistas. */
+
+/* =========================================
+   CONFIGURAÇÃO SUPABASE
+
+   Use a mesma URL e chave publishable/anon
+   do UnderFy original.
+========================================= */
+
 const SUPABASE_URL="";
+
 const SUPABASE_ANON_KEY="";
-let db=null,artistas=[],musicas=[],barras=[];const PH="https://via.placeholder.com/500";
-const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-function init(){if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase)db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);if(!db){document.getElementById('artistas').innerHTML='<div class="empty">Layout pronto. Conecte o Supabase do UnderFy original neste arquivo.</div>';document.getElementById('tracks').innerHTML='<div class="empty">Player pronto para os áudios do UnderFy.</div>';document.getElementById('barras').innerHTML='<div class="empty">Feed de BARRAS pronto para integração.</div>';document.getElementById('stories').innerHTML='<div class="empty">Área de Stories pronta para integração.</div>';return}carregarArtistas().then(()=>Promise.all([carregarMusicas(),carregarBarras(),carregarStories()]));}
-function topo(){scrollTo({top:0,behavior:'smooth'})}function scrollToId(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'})}
-function abrirBusca(){document.getElementById('searchOverlay').classList.add('open');setTimeout(()=>document.getElementById('q')?.focus(),80)}function fecharBusca(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('searchOverlay').classList.remove('open')}
-function abrirPerfilOuvinte(){document.getElementById('profile').innerHTML='<div class="pcover"></div><div class="pbody"><img class="avatar" src="'+PH+'"><h2>Ouvinte UnderFy</h2><div class="meta">Perfil de ouvinte</div><div class="section"><div class="empty">A conta de ouvinte será conectada na etapa de autenticação.</div></div></div>';document.getElementById('profileOverlay').classList.add('open')}
-function fecharPerfil(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('profileOverlay').classList.remove('open')}
-function artista(id){return artistas.find(a=>String(a.id)===String(id))}
-function abrirPerfilArtista(id){let a=artista(id);if(!a)return alert('Artista não encontrado.');document.getElementById('profile').innerHTML='<div class="pcover"></div><div class="pbody"><img class="avatar" src="'+esc(a.foto_url||PH)+'" onerror="this.src=\''+PH+'\'"><h2>'+esc(a.nome)+' <span class="badge"></span></h2><div class="meta">Artista UnderFy</div><div class="section"><div class="empty">O perfil exclusivo será expandido com BARRAS, músicas, Stories e projetos.</div></div></div>';document.getElementById('profileOverlay').classList.add('open')}
-async function carregarArtistas(){if(!db)return;try{let r=await db.from('artistas').select('*').order('nome',{ascending:true});if(r.error)throw r.error;artistas=r.data||[];let el=document.getElementById('artistas');el.innerHTML=artistas.length?artistas.map(a=>'<div class="artist" onclick="abrirPerfilArtista(\''+a.id+'\')"><img src="'+esc(a.foto_url||PH)+'" onerror="this.src=\''+PH+'\'"><b>'+esc(a.nome)+' <span class="badge"></span></b></div>').join(''):'<div class="empty">Nenhum artista cadastrado.</div>'}catch(e){console.error(e);document.getElementById('artistas').innerHTML='<div class="empty">Não foi possível carregar os artistas.</div>'}}
-async function carregarMusicas(){if(!db)return;try{let r=await db.from('musicas').select('*').order('created_at',{ascending:false}).limit(20);if(r.error)throw r.error;musicas=r.data||[];let el=document.getElementById('tracks');el.innerHTML=musicas.length?musicas.map((m,i)=>{let a=artista(m.artista_id);return '<div class="track" onclick="tocar('+i+')"><img class="cover" src="'+esc(m.capa_url||m.cover_url||PH)+'" onerror="this.src=\''+PH+'\'"><div class="tinfo"><b>'+esc(m.titulo||m.nome||'Música')+'</b><span>'+esc(a?.nome||'Artista UnderFy')+'</span></div><button class="play" onclick="event.stopPropagation();tocar('+i+')">Play</button></div>'}).join(''):'<div class="empty">Nenhuma música encontrada.</div>'}catch(e){console.error(e);document.getElementById('tracks').innerHTML='<div class="empty">Não foi possível carregar as músicas.</div>'}}
-async function carregarBarras(){if(!db)return;try{let r=await db.from('barras').select('*').order('created_at',{ascending:false}).limit(20);if(r.error)throw r.error;barras=r.data||[];let el=document.getElementById('barras');el.innerHTML=barras.length?barras.map(b=>{let a=artista(b.artista_id)||{nome:'Artista',foto_url:PH};let d=b.created_at?new Date(b.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';return '<article class="barra"><div class="bhead"><img src="'+esc(a.foto_url||PH)+'" onerror="this.src=\''+PH+'\'" onclick="event.stopPropagation();abrirPerfilArtista(\''+b.artista_id+'\')"><div class="bauthor" onclick="abrirPerfilArtista(\''+b.artista_id+'\')"><b>'+esc(a.nome)+' <span class="badge"></span></b><small>'+d+'</small></div></div>'+(b.texto?'<div class="btext">'+esc(b.texto)+'</div>':'')+(b.audio_url?'<audio class="audio" controls preload="metadata" src="'+esc(b.audio_url)+'"></audio>':'')+'<div class="bactions"><button onclick="curtir(\''+b.id+'\')">Curtir Curtir</button><button onclick="comentar(\''+b.id+'\')">Comentar Comentar</button></div></article>'}).join(''):'<div class="empty">Nenhuma BARRA publicada ainda.</div>'}catch(e){console.error(e);document.getElementById('barras').innerHTML='<div class="empty">Não foi possível carregar as BARRAS.</div>'}}
-async function carregarStories(){if(!db)return;document.getElementById('stories').innerHTML='<div class="empty">Stories preparados para integração com o sistema de Stories do UnderFy.</div>'}
-async function pesquisar(q){q=String(q||'').trim().toLowerCase();let el=document.getElementById('results');if(!q){el.innerHTML='<div class="empty">Digite para buscar.</div>';return}if(!artistas.length)await carregarArtistas();let as=artistas.filter(a=>String(a.nome||'').toLowerCase().includes(q)),ms=musicas.filter(m=>String(m.titulo||m.nome||'').toLowerCase().includes(q));el.innerHTML=as.map(a=>'<div class="result" onclick="fecharBusca();abrirPerfilArtista(\''+a.id+'\')"><img src="'+esc(a.foto_url||PH)+'"><div><b>'+esc(a.nome)+'</b><div class="meta">Artista</div></div></div>').join('')+ms.map(m=>'<div class="result" onclick="fecharBusca();tocarId(\''+m.id+'\')"><img style="border-radius:9px" src="'+esc(m.capa_url||m.cover_url||PH)+'"><div><b>'+esc(m.titulo||m.nome||'Música')+'</b><div class="meta">Música</div></div></div>').join('')||'<div class="empty">Nenhum resultado encontrado.</div>'}
-function tocar(i){let m=musicas[i];if(!m)return;let url=m.audio_url||m.url||m.arquivo_url;if(!url)return alert('Esta música ainda não possui áudio disponível.');let a=document.getElementById('audio');a.src=url;document.getElementById('ptitle').textContent=m.titulo||m.nome||'Música';document.getElementById('partist').textContent=artista(m.artista_id)?.nome||'UnderFy';document.getElementById('pcover').src=m.capa_url||m.cover_url||PH;document.getElementById('player').classList.add('open');a.play().then(()=>document.getElementById('pplay').textContent='Pause').catch(()=>{} )}
-function tocarId(id){let i=musicas.findIndex(m=>String(m.id)===String(id));if(i>=0)tocar(i)}function togglePlay(){let a=document.getElementById('audio');if(!a.src)return;if(a.paused){a.play();document.getElementById('pplay').textContent='Pause'}else{a.pause();document.getElementById('pplay').textContent='Play'}}
-document.getElementById('audio').addEventListener('timeupdate',function(){document.getElementById('prog').style.width=(this.duration?this.currentTime/this.duration*100:0)+'%'})
-function curtir(){alert('Curtidas serão conectadas à conta do ouvinte na etapa de autenticação.')}function comentar(){alert('Comentários serão conectados à conta do ouvinte na etapa de autenticação.')}
+
+
+let db=null;
+
+let artistas=[];
+
+let musicas=[];
+
+let barras=[];
+
+let indiceAtual=-1;
+
+
+const PH="https://via.placeholder.com/500";
+
+
+/* =========================================
+   SEGURANÇA
+========================================= */
+
+const esc=v=>
+String(v??'')
+.replace(/&/g,'&amp;')
+.replace(/</g,'&lt;')
+.replace(/>/g,'&gt;')
+.replace(/"/g,'&quot;')
+.replace(/'/g,'&#039;');
+
+
+/* =========================================
+   INICIALIZAÇÃO
+========================================= */
+
+function init(){
+
+    if(
+        SUPABASE_URL &&
+        SUPABASE_ANON_KEY &&
+        window.supabase
+    ){
+
+        db=window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+    }
+
+
+    if(!db){
+
+        document.getElementById('artistas').innerHTML=
+        '<div class="empty">'+
+        'Layout pronto. Conecte o Supabase do UnderFy original.'+
+        '</div>';
+
+
+        document.getElementById('tracks').innerHTML=
+        '<div class="empty">'+
+        'Player pronto para os áudios do UnderFy.'+
+        '</div>';
+
+
+        document.getElementById('barras').innerHTML=
+        '<div class="empty">'+
+        'Feed de BARRAS pronto para integração.'+
+        '</div>';
+
+
+        document.getElementById('stories').innerHTML=
+        '<div class="empty">'+
+        'Área de Stories pronta para integração.'+
+        '</div>';
+
+        return;
+
+    }
+
+
+    carregarArtistas().then(()=>{
+
+        carregarMusicas();
+
+        carregarBarras();
+
+        carregarStories();
+
+    });
+
+}
+
+
+/* =========================================
+   NAVEGAÇÃO
+========================================= */
+
+function topo(){
+
+    window.scrollTo({
+        top:0,
+        behavior:'smooth'
+    });
+
+}
+
+
+function scrollToId(id){
+
+    document
+    .getElementById(id)
+    ?.scrollIntoView({
+        behavior:'smooth'
+    });
+
+}
+
+
+/* =========================================
+   BUSCA
+========================================= */
+
+function abrirBusca(){
+
+    document
+    .getElementById('searchOverlay')
+    .classList.add('open');
+
+
+    setTimeout(()=>{
+
+        document
+        .getElementById('q')
+        ?.focus();
+
+    },80);
+
+}
+
+
+function fecharBusca(e){
+
+    if(
+        e &&
+        e.target!==e.currentTarget
+    ) return;
+
+
+    document
+    .getElementById('searchOverlay')
+    .classList.remove('open');
+
+}
+
+
+/* =========================================
+   PERFIL OUVINTE
+========================================= */
+
+function abrirPerfilOuvinte(){
+
+    document
+    .getElementById('profile')
+    .innerHTML=`
+
+        <div class="pcover-profile"></div>
+
+        <div class="pbody">
+
+            <img
+                class="avatar"
+                src="${PH}"
+                alt="Perfil">
+
+            <h2>
+                Ouvinte UnderFy
+            </h2>
+
+            <div class="meta">
+                Perfil de ouvinte
+            </div>
+
+            <div class="section">
+
+                <div class="empty">
+
+                    Sua conta será conectada
+                    na etapa de autenticação.
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document
+    .getElementById('profileOverlay')
+    .classList.add('open');
+
+}
+
+
+function fecharPerfil(e){
+
+    if(
+        e &&
+        e.target!==e.currentTarget
+    ) return;
+
+
+    document
+    .getElementById('profileOverlay')
+    .classList.remove('open');
+
+}
+
+
+/* =========================================
+   ARTISTA
+========================================= */
+
+function artista(id){
+
+    return artistas.find(
+        a=>String(a.id)===String(id)
+    );
+
+}
+
+
+function abrirPerfilArtista(id){
+
+    let a=artista(id);
+
+
+    if(!a){
+
+        alert('Artista não encontrado.');
+
+        return;
+
+    }
+
+
+    document
+    .getElementById('profile')
+    .innerHTML=`
+
+        <div class="pcover-profile"></div>
+
+        <div class="pbody">
+
+            <img
+                class="avatar"
+                src="${esc(a.foto_url||PH)}"
+                onerror="this.src='${PH}'">
+
+            <h2>
+                ${esc(a.nome)}
+                <span class="badge">✓</span>
+            </h2>
+
+            <div class="meta">
+                Artista UnderFy
+            </div>
+
+            <div class="section">
+
+                <div class="empty">
+
+                    O perfil exclusivo será
+                    expandido com músicas,
+                    BARRAS, Stories e projetos.
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document
+    .getElementById('profileOverlay')
+    .classList.add('open');
+
+}
+
+
+/* =========================================
+   ARTISTAS
+========================================= */
+
+async function carregarArtistas(){
+
+    if(!db) return;
+
+
+    try{
+
+        let r=
+        await db
+        .from('artistas')
+        .select('*')
+        .order('nome',{
+            ascending:true
+        });
+
+
+        if(r.error)
+            throw r.error;
+
+
+        artistas=r.data||[];
+
+
+        let el=
+        document.getElementById('artistas');
+
+
+        el.innerHTML=
+
+        artistas.length
+
+        ?
+
+        artistas.map(a=>`
+
+            <div
+                class="artist"
+                onclick="abrirPerfilArtista('${a.id}')">
+
+                <img
+                    src="${esc(a.foto_url||PH)}"
+                    onerror="this.src='${PH}'">
+
+                <b>
+                    ${esc(a.nome)}
+                    <span class="badge">✓</span>
+                </b>
+
+            </div>
+
+        `).join('')
+
+        :
+
+        '<div class="empty">'+
+        'Nenhum artista cadastrado.'+
+        '</div>';
+
+
+    }catch(e){
+
+        console.error(e);
+
+        document
+        .getElementById('artistas')
+        .innerHTML=
+        '<div class="empty">'+
+        'Não foi possível carregar os artistas.'+
+        '</div>';
+
+    }
+
+}
+
+
+/* =========================================
+   MÚSICAS
+========================================= */
+
+async function carregarMusicas(){
+
+    if(!db) return;
+
+
+    try{
+
+        let r=
+        await db
+        .from('musicas')
+        .select('*')
+        .order(
+            'created_at',
+            {ascending:false}
+        )
+        .limit(20);
+
+
+        if(r.error)
+            throw r.error;
+
+
+        musicas=r.data||[];
+
+
+        renderizarMusicas();
+
+        renderizarContinue();
+
+        renderizarRecomendacoes();
+
+
+    }catch(e){
+
+        console.error(e);
+
+        document
+        .getElementById('tracks')
+        .innerHTML=
+        '<div class="empty">'+
+        'Não foi possível carregar as músicas.'+
+        '</div>';
+
+    }
+
+}
+
+
+/* =========================================
+   RENDER MÚSICAS
+========================================= */
+
+function renderizarMusicas(){
+
+    let el=
+    document.getElementById('tracks');
+
+
+    el.innerHTML=
+
+    musicas.length
+
+    ?
+
+    musicas.map((m,i)=>{
+
+        let a=artista(m.artista_id);
+
+
+        return `
+
+        <div
+            class="track"
+            onclick="tocar(${i})">
+
+            <img
+                class="cover"
+                src="${esc(
+                    m.capa_url||
+                    m.cover_url||
+                    PH
+                )}"
+                onerror="this.src='${PH}'">
+
+
+            <div class="tinfo">
+
+                <b>
+                    ${esc(
+                        m.titulo||
+                        m.nome||
+                        'Música'
+                    )}
+                </b>
+
+                <span>
+                    ${esc(
+                        a?.nome||
+                        'Artista UnderFy'
+                    )}
+                </span>
+
+            </div>
+
+
+            <div class="track-actions">
+
+                <button
+                    class="like-btn"
+                    onclick="event.stopPropagation();curtirMusica('${m.id}')">
+
+                    ♡
+
+                </button>
+
+
+                <button
+                    class="play"
+                    onclick="event.stopPropagation();tocar(${i})">
+
+                    ▶
+
+                </button>
+
+            </div>
+
+        </div>
+
+        `;
+
+    }).join('')
+
+    :
+
+    '<div class="empty">'+
+    'Nenhuma música encontrada.'+
+    '</div>';
+
+}
+
+
+/* =========================================
+   CONTINUE OUVINDO
+========================================= */
+
+function renderizarContinue(){
+
+    let el=
+    document.getElementById('continue');
+
+
+    if(!musicas.length){
+
+        el.innerHTML=
+        '<div class="empty">'+
+        'Comece a ouvir músicas para criar seu histórico.'+
+        '</div>';
+
+        return;
+
+    }
+
+
+    let lista=
+    musicas.slice(0,5);
+
+
+    el.innerHTML=
+    lista.map((m,i)=>{
+
+        let a=artista(m.artista_id);
+
+
+        return `
+
+        <div
+            class="continue-card"
+            onclick="tocar(${i})">
+
+            <img
+                class="continue-cover"
+                src="${esc(
+                    m.capa_url||
+                    m.cover_url||
+                    PH
+                )}"
+                onerror="this.src='${PH}'">
+
+
+            <div class="continue-info">
+
+                <b>
+                    ${esc(
+                        m.titulo||
+                        m.nome||
+                        'Música'
+                    )}
+                </b>
+
+                <span>
+                    ${esc(
+                        a?.nome||
+                        'Artista'
+                    )}
+                </span>
+
+            </div>
+
+
+            <button
+                class="mini-play"
+                onclick="event.stopPropagation();tocar(${i})">
+
+                ▶
+
+            </button>
+
+        </div>
+
+        `;
+
+    }).join('');
+
+}
+
+
+/* =========================================
+   RECOMENDAÇÕES
+========================================= */
+
+function renderizarRecomendacoes(){
+
+    let el=
+    document.getElementById('recommend');
+
+
+    if(!musicas.length){
+
+        el.innerHTML=
+        '<div class="empty">'+
+        'Suas recomendações aparecerão aqui.'+
+        '</div>';
+
+        return;
+
+    }
+
+
+    el.innerHTML=
+
+    musicas.slice(0,5).map((m,i)=>{
+
+        let a=artista(m.artista_id);
+
+
+        return `
+
+        <div
+            class="recommend"
+            onclick="tocar(${i})">
+
+            <img
+                src="${esc(
+                    m.capa_url||
+                    m.cover_url||
+                    PH
+                )}"
+                onerror="this.src='${PH}'">
+
+            <b>
+                ${esc(
+                    m.titulo||
+                    m.nome||
+                    'Música'
+                )}
+            </b>
+
+            <span>
+                ${esc(
+                    a?.nome||
+                    'Artista UnderFy'
+                )}
+            </span>
+
+        </div>
+
+        `;
+
+    }).join('');
+
+}
+
+
+/* =========================================
+   BARRAS
+========================================= */
+
+async function carregarBarras(){
+
+    if(!db) return;
+
+
+    try{
+
+        let r=
+        await db
+        .from('barras')
+        .select('*')
+        .order(
+            'created_at',
+            {ascending:false}
+        )
+        .limit(20);
+
+
+        if(r.error)
+            throw r.error;
+
+
+        barras=r.data||[];
+
+
+        let el=
+        document.getElementById('barras');
+
+
+        el.innerHTML=
+
+        barras.length
+
+        ?
+
+        barras.map(b=>{
+
+            let a=
+            artista(b.artista_id)||{
+                nome:'Artista',
+                foto_url:PH
+            };
+
+
+            let d=
+            b.created_at
+
+            ?
+
+            new Date(
+                b.created_at
+            ).toLocaleString(
+                'pt-BR',
+                {
+                    day:'2-digit',
+                    month:'2-digit',
+                    hour:'2-digit',
+                    minute:'2-digit'
+                }
+            )
+
+            :
+
+            '';
+
+
+            return `
+
+            <article class="barra">
+
+                <div class="bhead">
+
+                    <img
+                        src="${esc(
+                            a.foto_url||PH
+                        )}"
+                        onerror="this.src='${PH}'"
+                        onclick="event.stopPropagation();abrirPerfilArtista('${b.artista_id}')">
+
+
+                    <div
+                        class="bauthor"
+                        onclick="abrirPerfilArtista('${b.artista_id}')">
+
+                        <b>
+
+                            ${esc(a.nome)}
+
+                            <span class="badge">
+                                ✓
+                            </span>
+
+                        </b>
+
+                        <small>
+                            ${d}
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                ${
+                    b.texto
+
+                    ?
+
+                    `<div class="btext">
+                        ${esc(b.texto)}
+                    </div>`
+
+                    :
+
+                    ''
+                }
+
+
+                ${
+                    b.audio_url
+
+                    ?
+
+                    `<audio
+                        class="audio"
+                        controls
+                        preload="metadata"
+                        src="${esc(b.audio_url)}">
+                    </audio>`
+
+                    :
+
+                    ''
+                }
+
+
+                <div class="bactions">
+
+                    <button
+                        onclick="curtir('${b.id}')">
+
+                        ♡ Curtir
+
+                    </button>
+
+
+                    <button
+                        onclick="comentar('${b.id}')">
+
+                        💬 Comentar
+
+                    </button>
+
+                </div>
+
+            </article>
+
+            `;
+
+        }).join('')
+
+        :
+
+        '<div class="empty">'+
+        'Nenhuma BARRA publicada ainda.'+
+        '</div>';
+
+
+    }catch(e){
+
+        console.error(e);
+
+        document
+        .getElementById('barras')
+        .innerHTML=
+        '<div class="empty">'+
+        'Não foi possível carregar as BARRAS.'+
+        '</div>';
+
+    }
+
+}
+
+
+/* =========================================
+   STORIES
+========================================= */
+
+async function carregarStories(){
+
+    if(!db){
+
+        document
+        .getElementById('stories')
+        .innerHTML=
+        '<div class="empty">'+
+        'Área de Stories pronta para integração.'+
+        '</div>';
+
+        return;
+
+    }
+
+
+    document
+    .getElementById('stories')
+    .innerHTML=
+    '<div class="empty">'+
+    'Stories preparados para integração com o sistema do UnderFy.'+
+    '</div>';
+
+}
+
+
+/* =========================================
+   PLAYER
+========================================= */
+
+function tocar(i){
+
+    let m=musicas[i];
+
+
+    if(!m) return;
+
+
+    indiceAtual=i;
+
+
+    let url=
+        m.audio_url||
+        m.url||
+        m.arquivo_url;
+
+
+    if(!url){
+
+        alert(
+            'Esta música ainda não possui áudio disponível.'
+        );
+
+        return;
+
+    }
+
+
+    let audio=
+    document.getElementById('audio');
+
+
+    audio.src=url;
+
+
+    document
+    .getElementById('ptitle')
+    .textContent=
+        m.titulo||
+        m.nome||
+        'Música';
+
+
+    document
+    .getElementById('partist')
+    .textContent=
+        artista(m.artista_id)?.nome||
+        'UnderFy';
+
+
+    document
+    .getElementById('pcover')
+    .src=
+        m.capa_url||
+        m.cover_url||
+        PH;
+
+
+    document
+    .getElementById('player')
+    .classList
+    .add('open');
+
+
+    audio
+    .play()
+    .then(()=>{
+
+        document
+        .getElementById('pplay')
+        .textContent='❚❚';
+
+    })
+    .catch(()=>{});
+
+}
+
+
+/* =========================================
+   TOCAR POR ID
+========================================= */
+
+function tocarId(id){
+
+    let i=
+    musicas.findIndex(
+        m=>String(m.id)===String(id)
+    );
+
+
+    if(i>=0)
+        tocar(i);
+
+}
+
+
+/* =========================================
+   PLAY / PAUSE
+========================================= */
+
+function togglePlay(){
+
+    let a=
+    document.getElementById('audio');
+
+
+    if(!a.src)
+        return;
+
+
+    if(a.paused){
+
+        a.play();
+
+        document
+        .getElementById('pplay')
+        .textContent='❚❚';
+
+    }else{
+
+        a.pause();
+
+        document
+        .getElementById('pplay')
+        .textContent='▶';
+
+    }
+
+}
+
+
+/* =========================================
+   PRÓXIMA MÚSICA
+========================================= */
+
+function proximaMusica(){
+
+    if(!musicas.length)
+        return;
+
+
+    let next=
+        indiceAtual+1;
+
+
+    if(next>=musicas.length)
+        next=0;
+
+
+    tocar(next);
+
+}
+
+
+/* =========================================
+   MÚSICA ANTERIOR
+========================================= */
+
+function musicaAnterior(){
+
+    if(!musicas.length)
+        return;
+
+
+    let prev=
+        indiceAtual-1;
+
+
+    if(prev<0)
+        prev=musicas.length-1;
+
+
+    tocar(prev);
+
+}
+
+
+/* =========================================
+   EVENTOS DO PLAYER
+========================================= */
+
+document
+.getElementById('audio')
+.addEventListener(
+    'timeupdate',
+    function(){
+
+        document
+        .getElementById('prog')
+        .style.width=
+
+        (
+            this.duration
+            ?
+
+            this.currentTime/
+            this.duration*
+            100
+
+            :
+
+            0
+
+        )+'%';
+
+    }
+);
+
+
+document
+.getElementById('audio')
+.addEventListener(
+    'ended',
+    function(){
+
+        proximaMusica();
+
+    }
+);
+
+
+/* =========================================
+   BUSCA
+========================================= */
+
+async function pesquisar(q){
+
+    q=
+    String(q||'')
+    .trim()
+    .toLowerCase();
+
+
+    let el=
+    document.getElementById('results');
+
+
+    if(!q){
+
+        el.innerHTML=
+        '<div class="empty">'+
+        'Digite para buscar.'+
+        '</div>';
+
+        return;
+
+    }
+
+
+    if(!artistas.length)
+        await carregarArtistas();
+
+
+    let as=
+    artistas.filter(
+        a=>
+        String(a.nome||'')
+        .toLowerCase()
+        .includes(q)
+    );
+
+
+    let ms=
+    musicas.filter(
+        m=>
+        String(
+            m.titulo||
+            m.nome||
+            ''
+        )
+        .toLowerCase()
+        .includes(q)
+    );
+
+
+    let html='';
+
+
+    html+=
+
+    as.map(a=>`
+
+        <div
+            class="result"
+            onclick="fecharBusca();abrirPerfilArtista('${a.id}')">
+
+            <img
+                src="${esc(a.foto_url||PH)}">
+
+            <div>
+
+                <b>
+                    ${esc(a.nome)}
+                </b>
+
+                <div class="meta">
+                    Artista
+                </div>
+
+            </div>
+
+        </div>
+
+    `).join('');
+
+
+    html+=
+
+    ms.map(m=>`
+
+        <div
+            class="result"
+            onclick="fecharBusca();tocarId('${m.id}')">
+
+            <img
+                style="border-radius:9px"
+                src="${esc(
+                    m.capa_url||
+                    m.cover_url||
+                    PH
+                )}">
+
+            <div>
+
+                <b>
+                    ${esc(
+                        m.titulo||
+                        m.nome||
+                        'Música'
+                    )}
+                </b>
+
+                <div class="meta">
+                    Música
+                </div>
+
+            </div>
+
+        </div>
+
+    `).join('');
+
+
+    el.innerHTML=
+
+    html||
+
+    '<div class="empty">'+
+    'Nenhum resultado encontrado.'+
+    '</div>';
+
+}
+
+
+/* =========================================
+   CURTIDAS
+========================================= */
+
+function curtirMusica(){
+
+    alert(
+        'Curtidas serão conectadas à conta do ouvinte na etapa de autenticação.'
+    );
+
+}
+
+
+function curtir(){
+
+    alert(
+        'Curtidas serão conectadas à conta do ouvinte na etapa de autenticação.'
+    );
+
+}
+
+
+/* =========================================
+   COMENTÁRIOS
+========================================= */
+
+function comentar(){
+
+    alert(
+        'Comentários serão conectados à conta do ouvinte na etapa de autenticação.'
+    );
+
+}
+
+
+/* =========================================
+   START
+========================================= */
+
 init();
-</script></body></html>
+
+</script>
+
+
+</body>
+
+</html>
