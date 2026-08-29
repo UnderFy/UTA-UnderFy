@@ -8,7 +8,7 @@
 
 <meta name="theme-color" content="#080808">
 
-<title>UTA • UnderFy</title>
+<title>UnderFy — Ouvintes</title>
 
 <style>
 
@@ -53,9 +53,20 @@ button{
     border:0;
 }
 
+button,
+a{
+    -webkit-tap-highlight-color:transparent;
+}
+
 a{
     text-decoration:none;
     color:inherit;
+}
+
+svg{
+    width:20px;
+    height:20px;
+    stroke:currentColor;
 }
 
 /* =========================
@@ -102,7 +113,7 @@ a{
     background:var(--green);
     color:#050505;
 
-    font-size:12px;
+    font-size:11px;
     font-weight:1000;
 }
 
@@ -198,6 +209,7 @@ main{
     border-radius:50%;
 
     border:1px solid rgba(156,255,0,.12);
+
     box-shadow:
         0 0 0 40px rgba(156,255,0,.025),
         0 0 0 80px rgba(156,255,0,.018);
@@ -413,9 +425,17 @@ main{
     background:var(--green);
     color:#050505;
 
+    display:grid;
+    place-items:center;
+
     cursor:pointer;
 
     flex-shrink:0;
+}
+
+.mini-play svg{
+    width:15px;
+    height:15px;
 }
 
 /* =========================
@@ -584,11 +604,20 @@ main{
     font-size:11px;
 
     cursor:pointer;
+
+    display:flex;
+    align-items:center;
+    gap:5px;
 }
 
 .bactions button:hover{
     color:#fff;
     background:#292929;
+}
+
+.bactions svg{
+    width:14px;
+    height:14px;
 }
 
 /* =========================
@@ -740,6 +769,9 @@ main{
     color:#aaa;
 
     cursor:pointer;
+
+    display:grid;
+    place-items:center;
 }
 
 .play{
@@ -891,23 +923,37 @@ main{
 
     align-items:center;
 
-    gap:5px;
+    gap:4px;
 
     font-size:10px;
+
+    min-width:60px;
+
+    transition:.2s;
 }
 
 .nav button.active{
     color:#fff;
 }
 
+.nav button:hover{
+    color:#fff;
+}
+
 .nav i{
     font-style:normal;
 
-    font-size:19px;
+    display:grid;
+    place-items:center;
+}
+
+.nav svg{
+    width:19px;
+    height:19px;
 }
 
 /* =========================
-   PLAYER
+   MINI PLAYER
 ========================= */
 
 .player{
@@ -938,6 +984,8 @@ main{
     padding:8px 12px;
 
     box-shadow:0 12px 35px rgba(0,0,0,.4);
+
+    cursor:pointer;
 }
 
 .player.open{
@@ -953,6 +1001,8 @@ main{
     object-fit:cover;
 
     background:#222;
+
+    flex-shrink:0;
 }
 
 .pinfo{
@@ -996,11 +1046,21 @@ main{
     font-weight:bold;
 
     cursor:pointer;
+
+    display:grid;
+    place-items:center;
+
+    flex-shrink:0;
+}
+
+.pbtn svg{
+    width:18px;
+    height:18px;
 }
 
 .pnext{
-    width:38px;
-    height:38px;
+    width:36px;
+    height:36px;
 
     border-radius:50%;
 
@@ -1009,6 +1069,16 @@ main{
     color:#fff;
 
     cursor:pointer;
+
+    display:grid;
+    place-items:center;
+
+    flex-shrink:0;
+}
+
+.pnext svg{
+    width:16px;
+    height:16px;
 }
 
 .progress{
@@ -1031,6 +1101,405 @@ main{
     width:0;
 
     background:var(--green);
+}
+
+/* =========================
+   PLAYER EXPANDIDO
+========================= */
+
+.full-player{
+    position:fixed;
+
+    inset:0;
+
+    z-index:200;
+
+    background:
+        radial-gradient(
+            circle at 50% 15%,
+            rgba(156,255,0,.10),
+            transparent 30%
+        ),
+        #080808;
+
+    display:none;
+
+    flex-direction:column;
+
+    overflow-y:auto;
+}
+
+.full-player.open{
+    display:flex;
+}
+
+.full-top{
+    height:70px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 18px;
+
+    flex-shrink:0;
+}
+
+.full-top button{
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    background:#191919;
+
+    color:#fff;
+
+    cursor:pointer;
+
+    display:grid;
+    place-items:center;
+}
+
+.full-top-title{
+    font-size:11px;
+
+    color:#777;
+
+    letter-spacing:2px;
+
+    font-weight:900;
+}
+
+.full-content{
+    width:min(520px,100%);
+
+    margin:auto;
+
+    padding:10px 22px 35px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+}
+
+.big-cover{
+    width:min(360px,82vw);
+    aspect-ratio:1;
+
+    border-radius:22px;
+
+    object-fit:cover;
+
+    background:#181818;
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.5);
+
+    border:1px solid #292929;
+}
+
+.full-info{
+    width:100%;
+
+    margin-top:27px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:15px;
+}
+
+.full-text{
+    min-width:0;
+}
+
+.full-text h2{
+    font-size:23px;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+
+    letter-spacing:-.7px;
+}
+
+.full-text p{
+    color:#777;
+
+    font-size:13px;
+
+    margin-top:6px;
+}
+
+.full-like{
+    width:43px;
+    height:43px;
+
+    border-radius:50%;
+
+    background:#191919;
+
+    color:#aaa;
+
+    cursor:pointer;
+
+    display:grid;
+    place-items:center;
+
+    flex-shrink:0;
+}
+
+.full-like.liked{
+    color:var(--green);
+}
+
+.full-progress{
+    width:100%;
+
+    margin-top:27px;
+}
+
+.progress-bar{
+    width:100%;
+
+    height:5px;
+
+    border-radius:10px;
+
+    background:#292929;
+
+    position:relative;
+
+    cursor:pointer;
+}
+
+.progress-bar span{
+    position:absolute;
+
+    left:0;
+    top:0;
+    bottom:0;
+
+    width:0;
+
+    border-radius:10px;
+
+    background:var(--green);
+}
+
+.time-row{
+    display:flex;
+
+    justify-content:space-between;
+
+    color:#666;
+
+    font-size:10px;
+
+    margin-top:8px;
+}
+
+.main-controls{
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:18px;
+
+    margin-top:23px;
+}
+
+.control{
+    width:45px;
+    height:45px;
+
+    border-radius:50%;
+
+    background:transparent;
+
+    color:#aaa;
+
+    cursor:pointer;
+
+    display:grid;
+    place-items:center;
+}
+
+.control:hover{
+    color:#fff;
+}
+
+.control.active{
+    color:var(--green);
+}
+
+.control-main{
+    width:64px;
+    height:64px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    color:#050505;
+
+    display:grid;
+    place-items:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.control-main:hover{
+    transform:scale(1.05);
+}
+
+.control-main svg{
+    width:25px;
+    height:25px;
+    fill:currentColor;
+}
+
+.secondary-controls{
+    display:flex;
+
+    justify-content:space-between;
+
+    width:100%;
+
+    margin-top:20px;
+}
+
+.volume{
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    color:#777;
+
+    flex:1;
+}
+
+.volume input{
+    width:100px;
+
+    accent-color:var(--green);
+}
+
+.queue-toggle{
+    color:#777;
+
+    background:none;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    font-size:11px;
+}
+
+.queue-toggle:hover{
+    color:#fff;
+}
+
+/* =========================
+   FILA
+========================= */
+
+.queue{
+    width:min(520px,100%);
+
+    margin:0 auto 30px;
+
+    padding:0 22px;
+
+    display:none;
+}
+
+.queue.open{
+    display:block;
+}
+
+.queue-title{
+    font-size:14px;
+
+    font-weight:bold;
+
+    margin-bottom:10px;
+}
+
+.queue-item{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:9px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+}
+
+.queue-item:hover{
+    background:#151515;
+}
+
+.queue-item.current{
+    background:#181818;
+}
+
+.queue-item img{
+    width:42px;
+    height:42px;
+
+    border-radius:8px;
+
+    object-fit:cover;
+}
+
+.queue-item-info{
+    min-width:0;
+    flex:1;
+}
+
+.queue-item-info b,
+.queue-item-info span{
+    display:block;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+.queue-item-info b{
+    font-size:12px;
+}
+
+.queue-item-info span{
+    color:#666;
+
+    font-size:10px;
+
+    margin-top:4px;
 }
 
 /* =========================
@@ -1104,6 +1573,8 @@ main{
 
     background:var(--green);
 
+    color:#050505;
+
     cursor:pointer;
 
     font-weight:bold;
@@ -1127,6 +1598,9 @@ main{
     cursor:pointer;
 
     z-index:120;
+
+    display:grid;
+    place-items:center;
 }
 
 .results{
@@ -1289,7 +1763,7 @@ main{
    MOBILE
 ========================= */
 
-@media(max-width:500px){
+@media(max-width:600px){
 
     main{
         padding-left:13px;
@@ -1311,6 +1785,32 @@ main{
             repeat(2,1fr);
     }
 
+    .full-content{
+        padding-top:5px;
+    }
+
+    .big-cover{
+        width:min(330px,82vw);
+    }
+
+    .main-controls{
+        gap:9px;
+    }
+
+    .control{
+        width:42px;
+        height:42px;
+    }
+
+    .control-main{
+        width:61px;
+        height:61px;
+    }
+
+    .volume input{
+        width:80px;
+    }
+
 }
 
 </style>
@@ -1324,17 +1824,18 @@ main{
 <div class="app">
 
 
-<!-- =========================
-     HEADER
-========================= -->
+<!-- HEADER -->
 
 <header class="top">
 
-    <a class="logo"
-       href="#"
-       onclick="topo();return false">
+    <a
+        class="logo"
+        href="#"
+        onclick="topo();return false">
 
-        <span class="mark">UF</span>
+        <span class="mark">
+            UF
+        </span>
 
         UnderFy
 
@@ -1345,18 +1846,20 @@ main{
 
         <button
             class="icon"
-            onclick="abrirBusca()">
+            onclick="abrirBusca()"
+            aria-label="Buscar">
 
-            🔎
+            <i data-lucide="search"></i>
 
         </button>
 
 
         <button
             class="icon"
-            onclick="abrirPerfilOuvinte()">
+            onclick="abrirPerfilOuvinte()"
+            aria-label="Perfil">
 
-            👤
+            <i data-lucide="user-round"></i>
 
         </button>
 
@@ -1365,13 +1868,10 @@ main{
 </header>
 
 
-
 <main>
 
 
-<!-- =========================
-     HERO
-========================= -->
+<!-- HERO -->
 
 <section class="hero">
 
@@ -1399,7 +1899,7 @@ main{
                 class="hero-btn"
                 onclick="scrollToId('musicas')">
 
-                ▶ Explorar músicas
+                Explorar músicas
 
             </button>
 
@@ -1408,7 +1908,7 @@ main{
                 class="hero-secondary"
                 onclick="abrirBusca()">
 
-                🔎 Buscar
+                Buscar
 
             </button>
 
@@ -1419,10 +1919,7 @@ main{
 </section>
 
 
-
-<!-- =========================
-     CONTINUE OUVINDO
-========================= -->
+<!-- CONTINUE OUVINDO -->
 
 <section class="section">
 
@@ -1453,10 +1950,7 @@ main{
 </section>
 
 
-
-<!-- =========================
-     STORIES
-========================= -->
+<!-- STORIES -->
 
 <section class="section">
 
@@ -1486,10 +1980,7 @@ main{
 </section>
 
 
-
-<!-- =========================
-     LANÇAMENTOS
-========================= -->
+<!-- MÚSICAS -->
 
 <section
     class="section"
@@ -1521,10 +2012,7 @@ main{
 </section>
 
 
-
-<!-- =========================
-     ARTISTAS
-========================= -->
+<!-- ARTISTAS -->
 
 <section class="section">
 
@@ -1554,10 +2042,7 @@ main{
 </section>
 
 
-
-<!-- =========================
-     BARRAS
-========================= -->
+<!-- BARRAS -->
 
 <section class="section">
 
@@ -1587,10 +2072,7 @@ main{
 </section>
 
 
-
-<!-- =========================
-     PARA VOCÊ
-========================= -->
+<!-- PARA VOCÊ -->
 
 <section class="section">
 
@@ -1624,9 +2106,7 @@ main{
 </main>
 
 
-<!-- =========================
-     NAVEGAÇÃO
-========================= -->
+<!-- NAVEGAÇÃO -->
 
 <nav class="nav">
 
@@ -1635,7 +2115,9 @@ main{
         class="active"
         onclick="topo()">
 
-        <i>⌂</i>
+        <i>
+            <i data-lucide="house"></i>
+        </i>
 
         Início
 
@@ -1645,7 +2127,9 @@ main{
     <button
         onclick="abrirBusca()">
 
-        <i>⌕</i>
+        <i>
+            <i data-lucide="search"></i>
+        </i>
 
         Buscar
 
@@ -1655,9 +2139,11 @@ main{
     <button
         onclick="scrollToId('musicas')">
 
-        <i>♫</i>
+        <i>
+            <i data-lucide="library"></i>
+        </i>
 
-        Músicas
+        Biblioteca
 
     </button>
 
@@ -1665,7 +2151,9 @@ main{
     <button
         onclick="abrirPerfilOuvinte()">
 
-        <i>◯</i>
+        <i>
+            <i data-lucide="user-round"></i>
+        </i>
 
         Perfil
 
@@ -1675,14 +2163,12 @@ main{
 </nav>
 
 
-
-<!-- =========================
-     PLAYER
-========================= -->
+<!-- MINI PLAYER -->
 
 <div
     id="player"
-    class="player">
+    class="player"
+    onclick="abrirPlayer()">
 
 
     <img
@@ -1707,9 +2193,10 @@ main{
 
     <button
         class="pnext"
-        onclick="musicaAnterior()">
+        onclick="event.stopPropagation();musicaAnterior()"
+        aria-label="Anterior">
 
-        ⏮
+        <i data-lucide="skip-back"></i>
 
     </button>
 
@@ -1717,18 +2204,20 @@ main{
     <button
         class="pbtn"
         id="pplay"
-        onclick="togglePlay()">
+        onclick="event.stopPropagation();togglePlay()"
+        aria-label="Reproduzir">
 
-        ▶
+        <i data-lucide="play"></i>
 
     </button>
 
 
     <button
         class="pnext"
-        onclick="proximaMusica()">
+        onclick="event.stopPropagation();proximaMusica()"
+        aria-label="Próxima">
 
-        ⏭
+        <i data-lucide="skip-forward"></i>
 
     </button>
 
@@ -1742,10 +2231,214 @@ main{
 </div>
 
 
+<!-- PLAYER EXPANDIDO -->
 
-<!-- =========================
-     BUSCA
-========================= -->
+<div
+    id="fullPlayer"
+    class="full-player">
+
+
+    <div class="full-top">
+
+        <button
+            onclick="fecharPlayer()"
+            aria-label="Fechar">
+
+            <i data-lucide="chevron-down"></i>
+
+        </button>
+
+
+        <div class="full-top-title">
+            TOCANDO AGORA
+        </div>
+
+
+        <button
+            onclick="toggleQueue()"
+            aria-label="Fila">
+
+            <i data-lucide="list-music"></i>
+
+        </button>
+
+    </div>
+
+
+    <div class="full-content">
+
+
+        <img
+            id="bigCover"
+            class="big-cover"
+            src="https://via.placeholder.com/500"
+            alt="Capa da música">
+
+
+        <div class="full-info">
+
+            <div class="full-text">
+
+                <h2 id="fullTitle">
+                    Nenhuma música
+                </h2>
+
+                <p id="fullArtist">
+                    UnderFy
+                </p>
+
+            </div>
+
+
+            <button
+                id="fullLike"
+                class="full-like"
+                onclick="curtirMusicaAtual()"
+                aria-label="Curtir">
+
+                <i data-lucide="heart"></i>
+
+            </button>
+
+        </div>
+
+
+        <div class="full-progress">
+
+            <div
+                id="progressBar"
+                class="progress-bar">
+
+                <span id="fullProgress"></span>
+
+            </div>
+
+
+            <div class="time-row">
+
+                <span id="currentTime">
+                    0:00
+                </span>
+
+                <span id="duration">
+                    0:00
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="main-controls">
+
+
+            <button
+                id="shuffleBtn"
+                class="control"
+                onclick="toggleShuffle()"
+                aria-label="Aleatório">
+
+                <i data-lucide="shuffle"></i>
+
+            </button>
+
+
+            <button
+                class="control"
+                onclick="musicaAnterior()"
+                aria-label="Anterior">
+
+                <i data-lucide="skip-back"></i>
+
+            </button>
+
+
+            <button
+                id="fullPlay"
+                class="control-main"
+                onclick="togglePlay()"
+                aria-label="Reproduzir">
+
+                <i data-lucide="play"></i>
+
+            </button>
+
+
+            <button
+                class="control"
+                onclick="proximaMusica()"
+                aria-label="Próxima">
+
+                <i data-lucide="skip-forward"></i>
+
+            </button>
+
+
+            <button
+                id="repeatBtn"
+                class="control"
+                onclick="toggleRepeat()"
+                aria-label="Repetir">
+
+                <i data-lucide="repeat"></i>
+
+            </button>
+
+
+        </div>
+
+
+        <div class="secondary-controls">
+
+
+            <div class="volume">
+
+                <i data-lucide="volume-2"></i>
+
+                <input
+                    id="volumeControl"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step=".01"
+                    value=".8">
+
+            </div>
+
+
+            <button
+                class="queue-toggle"
+                onclick="toggleQueue()">
+
+                <i data-lucide="list-music"></i>
+
+                Fila
+
+            </button>
+
+        </div>
+
+
+    </div>
+
+
+    <div
+        id="queue"
+        class="queue">
+
+        <div class="queue-title">
+            Próximas músicas
+        </div>
+
+        <div id="queueList"></div>
+
+    </div>
+
+
+</div>
+
+
+<!-- BUSCA -->
 
 <div
     id="searchOverlay"
@@ -1755,9 +2448,10 @@ main{
 
     <button
         class="close"
-        onclick="fecharBusca()">
+        onclick="fecharBusca()"
+        aria-label="Fechar">
 
-        ×
+        <i data-lucide="x"></i>
 
     </button>
 
@@ -1801,10 +2495,7 @@ main{
 </div>
 
 
-
-<!-- =========================
-     PERFIL
-========================= -->
+<!-- PERFIL -->
 
 <div
     id="profileOverlay"
@@ -1814,9 +2505,10 @@ main{
 
     <button
         class="close"
-        onclick="fecharPerfil()">
+        onclick="fecharPerfil()"
+        aria-label="Fechar">
 
-        ×
+        <i data-lucide="x"></i>
 
     </button>
 
@@ -1831,14 +2523,15 @@ main{
 </div>
 
 
-
 <audio id="audio"></audio>
 
 
+<!-- LUCIDE -->
 
-<!-- =========================
-     SUPABASE
-========================= -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+
+<!-- SUPABASE -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1847,9 +2540,6 @@ main{
 
 /* =========================================
    CONFIGURAÇÃO SUPABASE
-
-   Use a mesma URL e chave publishable/anon
-   do UnderFy original.
 ========================================= */
 
 const SUPABASE_URL="";
@@ -1867,8 +2557,29 @@ let barras=[];
 
 let indiceAtual=-1;
 
+let shuffle=false;
+
+let repeat=false;
+
+let historico=[];
+
 
 const PH="https://via.placeholder.com/500";
+
+
+/* =========================================
+   ÍCONES
+========================================= */
+
+function atualizarIcones(){
+
+    if(window.lucide){
+
+        lucide.createIcons();
+
+    }
+
+}
 
 
 /* =========================================
@@ -1885,10 +2596,13 @@ String(v??'')
 
 
 /* =========================================
-   INICIALIZAÇÃO
+   INIT
 ========================================= */
 
 function init(){
+
+    atualizarIcones();
+
 
     if(
         SUPABASE_URL &&
@@ -2010,7 +2724,7 @@ function fecharBusca(e){
 
 
 /* =========================================
-   PERFIL OUVINTE
+   PERFIL
 ========================================= */
 
 function abrirPerfilOuvinte(){
@@ -2075,7 +2789,7 @@ function fecharPerfil(e){
 
 
 /* =========================================
-   ARTISTA
+   ARTISTAS
 ========================================= */
 
 function artista(id){
@@ -2115,8 +2829,13 @@ function abrirPerfilArtista(id){
                 onerror="this.src='${PH}'">
 
             <h2>
+
                 ${esc(a.nome)}
-                <span class="badge">✓</span>
+
+                <span class="badge">
+                    ✓
+                </span>
+
             </h2>
 
             <div class="meta">
@@ -2148,7 +2867,7 @@ function abrirPerfilArtista(id){
 
 
 /* =========================================
-   ARTISTAS
+   CARREGAR ARTISTAS
 ========================================= */
 
 async function carregarArtistas(){
@@ -2162,9 +2881,10 @@ async function carregarArtistas(){
         await db
         .from('artistas')
         .select('*')
-        .order('nome',{
-            ascending:true
-        });
+        .order(
+            'nome',
+            {ascending:true}
+        );
 
 
         if(r.error)
@@ -2195,8 +2915,13 @@ async function carregarArtistas(){
                     onerror="this.src='${PH}'">
 
                 <b>
+
                     ${esc(a.nome)}
-                    <span class="badge">✓</span>
+
+                    <span class="badge">
+                        ✓
+                    </span>
+
                 </b>
 
             </div>
@@ -2208,6 +2933,9 @@ async function carregarArtistas(){
         '<div class="empty">'+
         'Nenhum artista cadastrado.'+
         '</div>';
+
+
+        atualizarIcones();
 
 
     }catch(e){
@@ -2227,7 +2955,7 @@ async function carregarArtistas(){
 
 
 /* =========================================
-   MÚSICAS
+   CARREGAR MÚSICAS
 ========================================= */
 
 async function carregarMusicas(){
@@ -2260,6 +2988,8 @@ async function carregarMusicas(){
         renderizarContinue();
 
         renderizarRecomendacoes();
+
+        renderizarFila();
 
 
     }catch(e){
@@ -2296,7 +3026,8 @@ function renderizarMusicas(){
 
     musicas.map((m,i)=>{
 
-        let a=artista(m.artista_id);
+        let a=
+        artista(m.artista_id);
 
 
         return `
@@ -2337,22 +3068,26 @@ function renderizarMusicas(){
 
             <div class="track-actions">
 
+
                 <button
                     class="like-btn"
-                    onclick="event.stopPropagation();curtirMusica('${m.id}')">
+                    onclick="event.stopPropagation();curtirMusica('${m.id}')"
+                    aria-label="Curtir">
 
-                    ♡
+                    <i data-lucide="heart"></i>
 
                 </button>
 
 
                 <button
                     class="play"
-                    onclick="event.stopPropagation();tocar(${i})">
+                    onclick="event.stopPropagation();tocar(${i})"
+                    aria-label="Reproduzir">
 
-                    ▶
+                    <i data-lucide="play"></i>
 
                 </button>
+
 
             </div>
 
@@ -2367,6 +3102,9 @@ function renderizarMusicas(){
     '<div class="empty">'+
     'Nenhuma música encontrada.'+
     '</div>';
+
+
+    atualizarIcones();
 
 }
 
@@ -2398,9 +3136,11 @@ function renderizarContinue(){
 
 
     el.innerHTML=
+
     lista.map((m,i)=>{
 
-        let a=artista(m.artista_id);
+        let a=
+        artista(m.artista_id);
 
 
         return `
@@ -2441,9 +3181,10 @@ function renderizarContinue(){
 
             <button
                 class="mini-play"
-                onclick="event.stopPropagation();tocar(${i})">
+                onclick="event.stopPropagation();tocar(${i})"
+                aria-label="Reproduzir">
 
-                ▶
+                <i data-lucide="play"></i>
 
             </button>
 
@@ -2452,6 +3193,9 @@ function renderizarContinue(){
         `;
 
     }).join('');
+
+
+    atualizarIcones();
 
 }
 
@@ -2482,7 +3226,8 @@ function renderizarRecomendacoes(){
 
     musicas.slice(0,5).map((m,i)=>{
 
-        let a=artista(m.artista_id);
+        let a=
+        artista(m.artista_id);
 
 
         return `
@@ -2668,7 +3413,9 @@ async function carregarBarras(){
                     <button
                         onclick="curtir('${b.id}')">
 
-                        ♡ Curtir
+                        <i data-lucide="heart"></i>
+
+                        Curtir
 
                     </button>
 
@@ -2676,7 +3423,9 @@ async function carregarBarras(){
                     <button
                         onclick="comentar('${b.id}')">
 
-                        💬 Comentar
+                        <i data-lucide="message-circle"></i>
+
+                        Comentar
 
                     </button>
 
@@ -2693,6 +3442,9 @@ async function carregarBarras(){
         '<div class="empty">'+
         'Nenhuma BARRA publicada ainda.'+
         '</div>';
+
+
+        atualizarIcones();
 
 
     }catch(e){
@@ -2747,10 +3499,12 @@ async function carregarStories(){
 
 function tocar(i){
 
-    let m=musicas[i];
+    let m=
+    musicas[i];
 
 
-    if(!m) return;
+    if(!m)
+        return;
 
 
     indiceAtual=i;
@@ -2804,39 +3558,87 @@ function tocar(i){
 
 
     document
+    .getElementById('bigCover')
+    .src=
+        m.capa_url||
+        m.cover_url||
+        PH;
+
+
+    document
+    .getElementById('fullTitle')
+    .textContent=
+        m.titulo||
+        m.nome||
+        'Música';
+
+
+    document
+    .getElementById('fullArtist')
+    .textContent=
+        artista(m.artista_id)?.nome||
+        'UnderFy';
+
+
+    document
     .getElementById('player')
     .classList
     .add('open');
+
+
+    salvarHistorico(m);
 
 
     audio
     .play()
     .then(()=>{
 
-        document
-        .getElementById('pplay')
-        .textContent='❚❚';
+        atualizarEstadoPlayer(true);
 
     })
-    .catch(()=>{});
+    .catch(()=>{
+
+        atualizarEstadoPlayer(false);
+
+    });
+
+
+    renderizarFila();
 
 }
 
 
 /* =========================================
-   TOCAR POR ID
+   ABRIR PLAYER
 ========================================= */
 
-function tocarId(id){
+function abrirPlayer(){
 
-    let i=
-    musicas.findIndex(
-        m=>String(m.id)===String(id)
-    );
+    if(indiceAtual<0)
+        return;
 
 
-    if(i>=0)
-        tocar(i);
+    document
+    .getElementById('fullPlayer')
+    .classList
+    .add('open');
+
+
+    atualizarIcones();
+
+}
+
+
+/* =========================================
+   FECHAR PLAYER
+========================================= */
+
+function fecharPlayer(){
+
+    document
+    .getElementById('fullPlayer')
+    .classList
+    .remove('open');
 
 }
 
@@ -2847,29 +3649,25 @@ function tocarId(id){
 
 function togglePlay(){
 
-    let a=
+    let audio=
     document.getElementById('audio');
 
 
-    if(!a.src)
+    if(!audio.src)
         return;
 
 
-    if(a.paused){
+    if(audio.paused){
 
-        a.play();
+        audio.play();
 
-        document
-        .getElementById('pplay')
-        .textContent='❚❚';
+        atualizarEstadoPlayer(true);
 
     }else{
 
-        a.pause();
+        audio.pause();
 
-        document
-        .getElementById('pplay')
-        .textContent='▶';
+        atualizarEstadoPlayer(false);
 
     }
 
@@ -2877,7 +3675,47 @@ function togglePlay(){
 
 
 /* =========================================
-   PRÓXIMA MÚSICA
+   ESTADO PLAYER
+========================================= */
+
+function atualizarEstadoPlayer(tocando){
+
+    const mini=
+    document.getElementById('pplay');
+
+
+    const full=
+    document.getElementById('fullPlay');
+
+
+    if(tocando){
+
+        mini.innerHTML=
+        '<i data-lucide="pause"></i>';
+
+
+        full.innerHTML=
+        '<i data-lucide="pause"></i>';
+
+    }else{
+
+        mini.innerHTML=
+        '<i data-lucide="play"></i>';
+
+
+        full.innerHTML=
+        '<i data-lucide="play"></i>';
+
+    }
+
+
+    atualizarIcones();
+
+}
+
+
+/* =========================================
+   PRÓXIMA
 ========================================= */
 
 function proximaMusica(){
@@ -2886,12 +3724,38 @@ function proximaMusica(){
         return;
 
 
-    let next=
+    let next;
+
+
+    if(shuffle){
+
+        if(musicas.length===1){
+
+            next=0;
+
+        }else{
+
+            do{
+
+                next=
+                Math.floor(
+                    Math.random()*musicas.length
+                );
+
+            }while(next===indiceAtual);
+
+        }
+
+    }else{
+
+        next=
         indiceAtual+1;
 
 
-    if(next>=musicas.length)
-        next=0;
+        if(next>=musicas.length)
+            next=0;
+
+    }
 
 
     tocar(next);
@@ -2900,7 +3764,7 @@ function proximaMusica(){
 
 
 /* =========================================
-   MÚSICA ANTERIOR
+   ANTERIOR
 ========================================= */
 
 function musicaAnterior(){
@@ -2909,8 +3773,21 @@ function musicaAnterior(){
         return;
 
 
+    let audio=
+    document.getElementById('audio');
+
+
+    if(audio.currentTime>3){
+
+        audio.currentTime=0;
+
+        return;
+
+    }
+
+
     let prev=
-        indiceAtual-1;
+    indiceAtual-1;
 
 
     if(prev<0)
@@ -2923,42 +3800,65 @@ function musicaAnterior(){
 
 
 /* =========================================
-   EVENTOS DO PLAYER
+   ALEATÓRIO
 ========================================= */
 
-document
-.getElementById('audio')
-.addEventListener(
-    'timeupdate',
-    function(){
+function toggleShuffle(){
 
-        document
-        .getElementById('prog')
-        .style.width=
+    shuffle=!shuffle;
 
-        (
-            this.duration
-            ?
 
-            this.currentTime/
-            this.duration*
-            100
+    document
+    .getElementById('shuffleBtn')
+    .classList
+    .toggle(
+        'active',
+        shuffle
+    );
 
-            :
+}
 
-            0
 
-        )+'%';
+/* =========================================
+   REPETIR
+========================================= */
 
-    }
-);
+function toggleRepeat(){
 
+    repeat=!repeat;
+
+
+    document
+    .getElementById('repeatBtn')
+    .classList
+    .toggle(
+        'active',
+        repeat
+    );
+
+}
+
+
+/* =========================================
+   FINAL DA MÚSICA
+========================================= */
 
 document
 .getElementById('audio')
 .addEventListener(
     'ended',
     function(){
+
+        if(repeat){
+
+            this.currentTime=0;
+
+            this.play();
+
+            return;
+
+        }
+
 
         proximaMusica();
 
@@ -2967,26 +3867,193 @@ document
 
 
 /* =========================================
-   BUSCA
+   PROGRESSO
 ========================================= */
 
-async function pesquisar(q){
+document
+.getElementById('audio')
+.addEventListener(
+    'timeupdate',
+    function(){
 
-    q=
-    String(q||'')
-    .trim()
-    .toLowerCase();
+        let percent=
+        this.duration
+        ?
 
+        this.currentTime/
+        this.duration*
+        100
+
+        :
+
+        0;
+
+
+        document
+        .getElementById('prog')
+        .style.width=
+        percent+'%';
+
+
+        document
+        .getElementById('fullProgress')
+        .style.width=
+        percent+'%';
+
+
+        document
+        .getElementById('currentTime')
+        .textContent=
+        formatarTempo(
+            this.currentTime
+        );
+
+
+        document
+        .getElementById('duration')
+        .textContent=
+        formatarTempo(
+            this.duration
+        );
+
+    }
+);
+
+
+/* =========================================
+   DURAÇÃO
+========================================= */
+
+document
+.getElementById('audio')
+.addEventListener(
+    'loadedmetadata',
+    function(){
+
+        document
+        .getElementById('duration')
+        .textContent=
+        formatarTempo(
+            this.duration
+        );
+
+    }
+);
+
+
+/* =========================================
+   FORMATAR TEMPO
+========================================= */
+
+function formatarTempo(segundos){
+
+    if(!isFinite(segundos))
+        return '0:00';
+
+
+    let minutos=
+    Math.floor(segundos/60);
+
+
+    let segundosRestantes=
+    Math.floor(segundos%60);
+
+
+    return minutos+':'+
+    String(
+        segundosRestantes
+    ).padStart(2,'0');
+
+}
+
+
+/* =========================================
+   BARRA CLICÁVEL
+========================================= */
+
+document
+.getElementById('progressBar')
+.addEventListener(
+    'click',
+    function(e){
+
+        let audio=
+        document.getElementById('audio');
+
+
+        if(!audio.duration)
+            return;
+
+
+        let rect=
+        this.getBoundingClientRect();
+
+
+        let percentual=
+        (e.clientX-rect.left)/
+        rect.width;
+
+
+        audio.currentTime=
+        percentual*
+        audio.duration;
+
+    }
+);
+
+
+/* =========================================
+   VOLUME
+========================================= */
+
+document
+.getElementById('volumeControl')
+.addEventListener(
+    'input',
+    function(){
+
+        document
+        .getElementById('audio')
+        .volume=
+        this.value;
+
+    }
+);
+
+
+document
+.getElementById('audio')
+.volume=.8;
+
+
+/* =========================================
+   FILA
+========================================= */
+
+function toggleQueue(){
+
+    document
+    .getElementById('queue')
+    .classList
+    .toggle('open');
+
+
+    renderizarFila();
+
+}
+
+
+function renderizarFila(){
 
     let el=
-    document.getElementById('results');
+    document.getElementById('queueList');
 
 
-    if(!q){
+    if(!musicas.length){
 
         el.innerHTML=
         '<div class="empty">'+
-        'Digite para buscar.'+
+        'Nenhuma música na fila.'+
         '</div>';
 
         return;
@@ -2994,80 +4061,30 @@ async function pesquisar(q){
     }
 
 
-    if(!artistas.length)
-        await carregarArtistas();
+    el.innerHTML=
+
+    musicas.map((m,i)=>{
+
+        let a=
+        artista(m.artista_id);
 
 
-    let as=
-    artistas.filter(
-        a=>
-        String(a.nome||'')
-        .toLowerCase()
-        .includes(q)
-    );
-
-
-    let ms=
-    musicas.filter(
-        m=>
-        String(
-            m.titulo||
-            m.nome||
-            ''
-        )
-        .toLowerCase()
-        .includes(q)
-    );
-
-
-    let html='';
-
-
-    html+=
-
-    as.map(a=>`
+        return `
 
         <div
-            class="result"
-            onclick="fecharBusca();abrirPerfilArtista('${a.id}')">
+            class="queue-item ${i===indiceAtual?'current':''}"
+            onclick="tocar(${i})">
 
             <img
-                src="${esc(a.foto_url||PH)}">
-
-            <div>
-
-                <b>
-                    ${esc(a.nome)}
-                </b>
-
-                <div class="meta">
-                    Artista
-                </div>
-
-            </div>
-
-        </div>
-
-    `).join('');
-
-
-    html+=
-
-    ms.map(m=>`
-
-        <div
-            class="result"
-            onclick="fecharBusca();tocarId('${m.id}')">
-
-            <img
-                style="border-radius:9px"
                 src="${esc(
                     m.capa_url||
                     m.cover_url||
                     PH
-                )}">
+                )}"
+                onerror="this.src='${PH}'">
 
-            <div>
+
+            <div class="queue-item-info">
 
                 <b>
                     ${esc(
@@ -3077,30 +4094,75 @@ async function pesquisar(q){
                     )}
                 </b>
 
-                <div class="meta">
-                    Música
-                </div>
+                <span>
+                    ${esc(
+                        a?.nome||
+                        'Artista UnderFy'
+                    )}
+                </span>
 
             </div>
 
         </div>
 
-    `).join('');
+        `;
 
-
-    el.innerHTML=
-
-    html||
-
-    '<div class="empty">'+
-    'Nenhum resultado encontrado.'+
-    '</div>';
+    }).join('');
 
 }
 
 
 /* =========================================
-   CURTIDAS
+   HISTÓRICO
+========================================= */
+
+function salvarHistorico(m){
+
+    try{
+
+        let atual=
+        JSON.parse(
+            localStorage.getItem(
+                'underfy_historico'
+            )||'[]'
+        );
+
+
+        atual=
+        atual.filter(
+            x=>String(x.id)!==
+            String(m.id)
+        );
+
+
+        atual.unshift({
+            id:m.id,
+            titulo:m.titulo||m.nome,
+            artista_id:m.artista_id,
+            capa_url:m.capa_url||m.cover_url||PH
+        });
+
+
+        atual=
+        atual.slice(0,20);
+
+
+        localStorage.setItem(
+            'underfy_historico',
+            JSON.stringify(atual)
+        );
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+
+/* =========================================
+   CURTIR
 ========================================= */
 
 function curtirMusica(){
@@ -3108,6 +4170,33 @@ function curtirMusica(){
     alert(
         'Curtidas serão conectadas à conta do ouvinte na etapa de autenticação.'
     );
+
+}
+
+
+function curtirMusicaAtual(){
+
+    const btn=
+    document.getElementById('fullLike');
+
+
+    btn.classList.toggle('liked');
+
+
+    if(btn.classList.contains('liked')){
+
+        btn.innerHTML=
+        '<i data-lucide="heart"></i>';
+
+    }else{
+
+        btn.innerHTML=
+        '<i data-lucide="heart"></i>';
+
+    }
+
+
+    atualizarIcones();
 
 }
 
@@ -3135,6 +4224,46 @@ function comentar(){
 
 
 /* =========================================
+   TOCAR POR ID
+========================================= */
+
+function tocarId(id){
+
+    let i=
+    musicas.findIndex(
+        m=>String(m.id)===String(id)
+    );
+
+
+    if(i>=0)
+        tocar(i);
+
+}
+
+
+/* =========================================
+   TECLA ESC
+========================================= */
+
+document.addEventListener(
+    'keydown',
+    function(e){
+
+        if(e.key==='Escape'){
+
+            fecharPlayer();
+
+            fecharBusca();
+
+            fecharPerfil();
+
+        }
+
+    }
+);
+
+
+/* =========================================
    START
 ========================================= */
 
@@ -3142,6 +4271,8 @@ init();
 
 </script>
 
+
+</div>
 
 </body>
 
