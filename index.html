@@ -1767,6 +1767,12 @@ MOBILE
 
 </style>
 
+
+<style>
+/* V5.2 — conta do ouvinte */
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999}.auth-overlay.open{display:flex}.auth-card{width:min(430px,100%);background:#0d0d0d;border:1px solid #292929;border-radius:24px;padding:28px;box-shadow:0 30px 90px rgba(0,0,0,.55)}.auth-card h2{margin:0 0 7px;font-size:26px}.auth-card p{color:#999;margin:0 0 22px}.auth-field{display:block;width:100%;margin:10px 0}.auth-field span{display:block;font-size:12px;color:#aaa;margin:0 0 7px}.auth-field input{width:100%;padding:14px 15px;border-radius:12px;border:1px solid #303030;background:#151515;color:#fff;outline:none}.auth-field input:focus{border-color:#9cff00}.auth-primary{width:100%;padding:14px;border:0;border-radius:12px;background:#9cff00;color:#050505;font-weight:800;cursor:pointer;margin-top:8px}.auth-secondary{width:100%;padding:12px;border:1px solid #303030;border-radius:12px;background:transparent;color:#fff;cursor:pointer;margin-top:10px}.auth-error{color:#ff7777;font-size:13px;min-height:18px;margin-top:10px}.auth-switch{text-align:center;color:#999;font-size:13px;margin-top:18px}.auth-switch button{background:none;border:0;color:#9cff00;cursor:pointer}.auth-close{position:absolute;right:18px;top:18px}.account-row{display:flex;gap:12px;align-items:center;margin:0 0 18px}.account-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;background:#191919}.account-name{font-weight:800}.account-email{font-size:12px;color:#888}.auth-card{position:relative}.account-actions{display:grid;gap:9px;margin-top:18px}.account-actions button{padding:13px;border-radius:12px;border:1px solid #303030;background:#151515;color:#fff;cursor:pointer}.account-actions button.danger{color:#ff8585}.login-required{padding:18px;border:1px dashed #333;border-radius:16px;color:#aaa;text-align:center}.login-required button{margin-top:12px;padding:10px 14px;border:0;border-radius:10px;background:#9cff00;color:#050505;font-weight:800}
+</style>
+
 </head>
 
 
@@ -2592,6 +2598,14 @@ NOVA PLAYLIST
 </div>
 
 
+
+<div id="authOverlay" class="auth-overlay" onclick="fecharOverlay('authOverlay',event)">
+  <div class="auth-card">
+    <button class="icon auth-close" onclick="fecharOverlay('authOverlay')"><i data-lucide="x"></i></button>
+    <div id="authView"></div>
+  </div>
+</div>
+
 <audio id="audio"></audio>
 
 
@@ -2612,6 +2626,9 @@ const SUPABASE_ANON_KEY="sb_publishable_b9yvSbmWOLVJvq4AB4CLmQ_VRuzpG5T";
 
 
 let db=null;
+let usuarioAtual=null;
+let perfilOuvinte=null;
+let authModo="login";
 
 let musicas=[];
 
@@ -2696,6 +2713,7 @@ INIT
 function init(){
 
     icones();
+    iniciarAutenticacao();
 
     renderizarBiblioteca();
 
@@ -4631,6 +4649,162 @@ function esc(v){
     .replace(/"/g,'&quot;')
     .replace(/'/g,'&#039;');
 
+}
+
+
+
+/* =========================================
+V5.2 — CONTA DO OUVINTE
+========================================= */
+
+async function iniciarAutenticacao(){
+    if(!db) return;
+    const {data}=await db.auth.getSession();
+    usuarioAtual=data?.session?.user||null;
+    if(usuarioAtual) await carregarPerfilOuvinte();
+    db.auth.onAuthStateChange(async (_event,session)=>{
+        usuarioAtual=session?.user||null;
+        if(usuarioAtual) await carregarPerfilOuvinte();
+        else perfilOuvinte=null;
+        renderizarBiblioteca();
+        atualizarPerfilHeader();
+    });
+}
+
+async function carregarPerfilOuvinte(){
+    if(!db||!usuarioAtual) return;
+    const {data,error}=await db.from('perfis_ouvintes').select('*').eq('id',usuarioAtual.id).maybeSingle();
+    if(!error && data){ perfilOuvinte=data; return; }
+    perfilOuvinte={id:usuarioAtual.id,nome:usuarioAtual.user_metadata?.nome||usuarioAtual.email?.split('@')[0]||'Ouvinte',avatar_url:usuarioAtual.user_metadata?.avatar_url||''};
+}
+
+function abrirPerfil(){
+    const view=document.getElementById('authView');
+    if(!view) return;
+    if(usuarioAtual){
+        const nome=perfilOuvinte?.nome||usuarioAtual.user_metadata?.nome||'Ouvinte UnderFy';
+        const avatar=perfilOuvinte?.avatar_url||PH;
+        view.innerHTML=`<div class="account-row"><img class="account-avatar" src="${esc(avatar)}" onerror="this.src='${PH}'"><div><div class="account-name">${esc(nome)}</div><div class="account-email">${esc(usuarioAtual.email||'')}</div></div></div><p>Sua conta do UnderFy está conectada.</p><div class="account-actions"><button onclick="fecharOverlay('authOverlay');abrirBiblioteca()"><i data-lucide="library"></i> Abrir biblioteca</button><button class="danger" onclick="sairConta()"><i data-lucide="log-out"></i> Sair da conta</button></div>`;
+    }else renderAuthLogin();
+    document.getElementById('authOverlay').classList.add('open');
+    icones();
+}
+
+function renderAuthLogin(){
+    authModo='login';
+    document.getElementById('authView').innerHTML=`<h2>Entrar no UnderFy</h2><p>Tenha sua biblioteca disponível em qualquer dispositivo.</p><label class="auth-field"><span>E-mail</span><input id="authEmail" type="email" autocomplete="email" placeholder="seu@email.com"></label><label class="auth-field"><span>Senha</span><input id="authPassword" type="password" autocomplete="current-password" placeholder="Sua senha"></label><div id="authError" class="auth-error"></div><button class="auth-primary" onclick="entrarConta()">Entrar</button><button class="auth-secondary" onclick="renderAuthCadastro()">Criar conta</button>`;
+}
+
+function renderAuthCadastro(){
+    authModo='cadastro';
+    document.getElementById('authView').innerHTML=`<h2>Criar conta</h2><p>Crie seu perfil de ouvinte e sincronize sua biblioteca.</p><label class="auth-field"><span>Nome</span><input id="authName" type="text" autocomplete="name" placeholder="Seu nome"></label><label class="auth-field"><span>E-mail</span><input id="authEmail" type="email" autocomplete="email" placeholder="seu@email.com"></label><label class="auth-field"><span>Senha</span><input id="authPassword" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres"></label><div id="authError" class="auth-error"></div><button class="auth-primary" onclick="criarConta()">Criar conta</button><button class="auth-secondary" onclick="renderAuthLogin()">Já tenho uma conta</button>`;
+}
+
+function authErro(msg){ const e=document.getElementById('authError'); if(e)e.textContent=msg||''; }
+
+async function criarConta(){
+    if(!db){authErro('Supabase não conectado.');return;}
+    const nome=document.getElementById('authName')?.value.trim();
+    const email=document.getElementById('authEmail')?.value.trim();
+    const senha=document.getElementById('authPassword')?.value||'';
+    if(!nome||!email||senha.length<6){authErro('Preencha nome, e-mail e uma senha com pelo menos 6 caracteres.');return;}
+    authErro('Criando conta...');
+    const {data,error}=await db.auth.signUp({email,password:senha,options:{data:{nome}}});
+    if(error){authErro(error.message);return;}
+    usuarioAtual=data.user||null;
+    if(usuarioAtual){
+        const {data:perfil}=await db.from('perfis_ouvintes').upsert({id:usuarioAtual.id,nome,avatar_url:null},{onConflict:'id'}).select().single();
+        perfilOuvinte=perfil||{id:usuarioAtual.id,nome};
+    }
+    if(data.session){ abrirPerfil(); } else { authErro('Conta criada. Verifique seu e-mail para confirmar a conta antes de entrar.'); }
+}
+
+async function entrarConta(){
+    if(!db){authErro('Supabase não conectado.');return;}
+    const email=document.getElementById('authEmail')?.value.trim();
+    const senha=document.getElementById('authPassword')?.value||'';
+    if(!email||!senha){authErro('Informe seu e-mail e sua senha.');return;}
+    authErro('Entrando...');
+    const {data,error}=await db.auth.signInWithPassword({email,password:senha});
+    if(error){authErro(error.message);return;}
+    usuarioAtual=data.user;
+    await carregarPerfilOuvinte();
+    abrirPerfil();
+    await sincronizarBibliotecaConta();
+}
+
+async function sairConta(){
+    if(db) await db.auth.signOut();
+    usuarioAtual=null; perfilOuvinte=null;
+    fecharOverlay('authOverlay');
+    renderizarBiblioteca();
+}
+
+async function sincronizarBibliotecaConta(){
+    if(!db||!usuarioAtual) return;
+    const tipos=[['curtidas','musicas_curtidas'],['salvos','musicas_salvas']];
+    for(const [tipo,tabela] of tipos){
+        const {data,error}=await db.from(tabela).select('musica_id').eq('ouvinte_id',usuarioAtual.id);
+        if(error) continue;
+        const ids=(data||[]).map(x=>String(x.musica_id));
+        const lista=musicas.filter(m=>ids.includes(String(m.id))).map(simplificarMusica);
+        setStorage(STORAGE[tipo],lista);
+    }
+    const {data:hist,error:histErr}=await db.from('historico_ouvintes').select('musica_id,criado_em').eq('ouvinte_id',usuarioAtual.id).order('criado_em',{ascending:false}).limit(100);
+    if(!histErr){
+        const lista=(hist||[]).map(x=>musicas.find(m=>String(m.id)===String(x.musica_id))).filter(Boolean).map(simplificarMusica);
+        setStorage(STORAGE.historico,lista);
+    }
+    const {data:pls,error:plErr}=await db.from('playlists').select('id,nome,capa_url,criado_em').eq('ouvinte_id',usuarioAtual.id).order('criado_em',{ascending:true});
+    if(!plErr){
+        const out=[];
+        for(const p of (pls||[])){
+            const {data:itens}=await db.from('playlist_musicas').select('musica_id').eq('playlist_id',p.id).order('posicao',{ascending:true});
+            out.push({id:p.id,nome:p.nome,capa_url:p.capa_url||PH,musicas:(itens||[]).map(x=>musicas.find(m=>String(m.id)===String(x.musica_id))).filter(Boolean).map(simplificarMusica)});
+        }
+        setStorage(STORAGE.playlists,out);
+    }
+    renderizarBiblioteca();
+}
+
+async function sincronizarAcao(tipo,m,adicionar){
+    if(!db||!usuarioAtual||!m?.id) return;
+    const tabela=tipo==='curtidas'?'musicas_curtidas':'musicas_salvas';
+    if(adicionar) await db.from(tabela).upsert({ouvinte_id:usuarioAtual.id,musica_id:m.id},{onConflict:'ouvinte_id,musica_id'});
+    else await db.from(tabela).delete().eq('ouvinte_id',usuarioAtual.id).eq('musica_id',m.id);
+}
+
+async function registrarHistoricoConta(m){
+    if(!db||!usuarioAtual||!m?.id) return;
+    await db.from('historico_ouvintes').upsert({ouvinte_id:usuarioAtual.id,musica_id:m.id,criado_em:new Date().toISOString()},{onConflict:'ouvinte_id,musica_id'});
+}
+
+const _salvarMusicaOriginal=salvarMusica;
+salvarMusica=async function(m){
+    const antes=getStorage(STORAGE.salvos).some(x=>String(x.id)===String(m?.id));
+    _salvarMusicaOriginal(m);
+    const depois=getStorage(STORAGE.salvos).some(x=>String(x.id)===String(m?.id));
+    await sincronizarAcao('salvos',m,depois);
+};
+
+const _curtirMusicaOriginal=curtirMusica;
+curtirMusica=async function(m){
+    const antes=getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m?.id));
+    _curtirMusicaOriginal(m);
+    const depois=getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m?.id));
+    await sincronizarAcao('curtidas',m,depois);
+};
+
+const _salvarHistoricoOriginal=salvarHistorico;
+salvarHistorico=async function(m){
+    _salvarHistoricoOriginal(m);
+    await registrarHistoricoConta(m);
+};
+
+function atualizarPerfilHeader(){
+    const b=document.querySelector('.actions .icon[onclick*="abrirPerfil"]');
+    if(!b) return;
+    b.setAttribute('aria-label',usuarioAtual?'Minha conta':'Entrar no UnderFy');
 }
 
 
