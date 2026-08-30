@@ -97,6 +97,21 @@ HEADER
     border-bottom:1px solid #171717;
 }
 
+/* V5.8 — identidade do cabeçalho: sem sublinhado/link azul */
+.logo,
+.logo:link,
+.logo:visited,
+.logo:hover,
+.logo:active,
+.logo:focus{
+    text-decoration:none !important;
+    color:inherit;
+}
+
+.logo span{
+    text-decoration:none !important;
+}
+
 .logo{
     display:flex;
     align-items:center;
@@ -3824,7 +3839,7 @@ function renderizarArtistas(){
         <div class="artist" onclick="abrirPerfilArtista('${esc(a.id)}')">
             <img src="${esc(a.foto_url||PH)}" onerror="this.src='${PH}'">
             <b>${esc(a.nome||'Artista UnderFy')} <span class="badge">✓</span></b>
-            <span class="artist-followers">${formatarNumero(contadoresSociais.artistas[String(a.id)]||0)} seguidores</span>
+            <span class="artist-followers" data-followers-artist="${esc(a.id)}">${formatarNumero(contadoresSociais.artistas[String(a.id)]||0)} seguidores</span>
         </div>
     `).join('');
     icones();
@@ -4075,16 +4090,47 @@ function renderizarPerfilArtista(a,tab='guias'){
     const followers=contadoresSociais.artistas[String(a.id)]||0;
     document.getElementById('artistProfile').innerHTML=`<div class="profile-cover"></div><div class="profile-body">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px"><div><img class="avatar" src="${esc(a.foto_url||PH)}" onerror="this.src='${PH}'"><h2>${esc(a.nome||'Artista')} <span class="badge">✓</span></h2><div class="meta">Artista UnderFy • UTA</div></div><button class="follow-btn ${following?'following':''}" onclick="toggleSeguirArtista('${esc(a.id)}')">${following?'Seguindo':'Seguir'}</button></div>
-        <div class="social-stats"><div class="social-stat"><b>${formatarNumero(followers)}</b><span>Seguidores</span></div><div class="social-stat"><b>${mus.length}</b><span>Guias</span></div><div class="social-stat"><b>${bars.length}</b><span>Barras</span></div><div class="social-stat"><b>${projs.length}</b><span>Projetos</span></div></div>
+        <div class="social-stats"><div class="social-stat"><b data-followers-total="${esc(a.id)}">${formatarNumero(followers)}</b><span>Seguidores</span></div><div class="social-stat"><b>${mus.length}</b><span>Guias</span></div><div class="social-stat"><b>${bars.length}</b><span>Barras</span></div><div class="social-stat"><b>${projs.length}</b><span>Projetos</span></div></div>
         <div class="profile-tabs">${[['guias','Guias'],['barras','Barras'],['projetos','Projetos']].map(([k,t])=>`<button class="profile-tab ${tab===k?'active':''}" onclick="renderizarPerfilArtista(artistaPerfilAtual,'${k}')">${t}</button>`).join('')}</div>
         ${content}</div>`; icones();
 }
 
+function atualizarContadoresSeguidoresVisiveis(id){
+    const k=String(id);
+    const total=formatarNumero(contadoresSociais.artistas[k]||0);
+    document.querySelectorAll(`[data-followers-artist="${CSS.escape(k)}"]`).forEach(el=>{el.textContent=total+' seguidores';});
+    const stat=document.querySelector(`[data-followers-total="${CSS.escape(k)}"]`);
+    if(stat) stat.textContent=total;
+}
+
 function toggleSeguirArtista(id){
-    let f=getSocial('follows'); const idx=f.findIndex(x=>String(x)===String(id)); if(idx>=0) f.splice(idx,1); else f.push(id); setSocial('follows',f);
-    const k=String(id);contadoresSociais.artistas[k]=Math.max(0,(contadoresSociais.artistas[k]||0)+(idx<0?1:-1));
-    if(db&&usuarioAtual){ (async()=>{ try{ if(idx<0) await db.from('artistas_seguidos').upsert({ouvinte_id:usuarioAtual.id,artista_id:id},{onConflict:'ouvinte_id,artista_id'}); else await db.from('artistas_seguidos').delete().eq('ouvinte_id',usuarioAtual.id).eq('artista_id',id); }catch(e){} })(); }
-    if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias'); renderizarArtistas(); renderizarParaVoce();
+    let f=getSocial('follows');
+    const idx=f.findIndex(x=>String(x)===String(id));
+    const seguindoAgora=idx<0;
+    if(idx>=0) f.splice(idx,1); else f.push(String(id));
+    setSocial('follows',f);
+
+    const k=String(id);
+    contadoresSociais.artistas[k]=Math.max(0,(contadoresSociais.artistas[k]||0)+(seguindoAgora?1:-1));
+
+    // Atualização imediata: o número de seguidores muda no mesmo toque, sem esperar a rede.
+    atualizarContadoresSeguidoresVisiveis(k);
+
+    if(db&&usuarioAtual){
+        (async()=>{
+            try{
+                if(seguindoAgora){
+                    await db.from('artistas_seguidos').upsert({ouvinte_id:usuarioAtual.id,artista_id:id},{onConflict:'ouvinte_id,artista_id'});
+                }else{
+                    await db.from('artistas_seguidos').delete().eq('ouvinte_id',usuarioAtual.id).eq('artista_id',id);
+                }
+            }catch(e){ console.warn('Não foi possível sincronizar o seguimento:',e); }
+        })();
+    }
+
+    if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
+    renderizarArtistas();
+    renderizarParaVoce();
 }
 
 function renderizarBarras(){
@@ -4107,7 +4153,7 @@ function renderBarra(b){
     const aid=b.artista_id??b.usuario_artista_id; const a=encontrarArtistaObj(aid); const key=String(b.id);
     const likes=getSocial('barraLikes').map(String).includes(key); const reps=getSocial('barraReposts').map(String).includes(key); const comments=comentariosDaBarra(key);
     const likesCount=contadoresSociais.barrasCurtidas[key]||0; const repsCount=contadoresSociais.barrasReposts[key]||0; const commentsCount=contadoresSociais.barrasComentarios[key]||comments.length;
-    return `<article class="barra" data-barra-id="${esc(key)}"><div class="bhead" onclick="abrirPerfilArtista('${esc(aid||'')}')"><img src="${esc(a?.foto_url||PH)}" onerror="this.src='${PH}'"><div class="bauthor"><b>${esc(a?.nome||b.artista_nome||'Artista UnderFy')} <span class="badge">✓</span></b><small>${formatarNumero(contadoresSociais.artistas[String(aid)]||0)} seguidores</small></div></div><div class="btext">${esc(b.texto||b.conteudo||b.letra||'Barra')}</div>${(b.audio_url||b.audio||b.url_audio)?`<audio class="audio" controls src="${esc(b.audio_url||b.audio||b.url_audio)}"></audio>`:''}<div class="pub-stats"><span class="bar-stat-action ${likes?'active':''}" onclick="event.stopPropagation();toggleBarraLike('${esc(key)}')" title="${likes?'Descurtir':'Curtir'}"><i data-lucide="heart"></i> ${formatarNumero(likesCount)}</span><span class="bar-stat-action ${reps?'active':''}" onclick="event.stopPropagation();toggleBarraRepost('${esc(key)}')" title="${reps?'Remover repost':'Repostar'}"><i data-lucide="repeat-2"></i> ${formatarNumero(repsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();toggleBarraComments('${esc(key)}')" title="Ver/comentar"><i data-lucide="message-circle"></i> ${formatarNumero(commentsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();compartilharBarra(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="Compartilhar"><i data-lucide="share-2"></i></span></div><div id="comments-${esc(key)}" class="bar-comments"><div>${comments.map(c=>`<div class="comment-item"><b>${esc(c.nome||c.ouvinte_nome||'Ouvinte')}</b> ${esc(c.texto||'')}</div>`).join('')}</div><textarea id="commentText-${esc(key)}" placeholder="Comente nesta Barra..."></textarea><button class="follow-btn" style="margin-top:7px" onclick="enviarComentarioBarra('${esc(key)}')">Comentar</button></div></article>`;
+    return `<article class="barra" data-barra-id="${esc(key)}"><div class="bhead" onclick="abrirPerfilArtista('${esc(aid||'')}')"><img src="${esc(a?.foto_url||PH)}" onerror="this.src='${PH}'"><div class="bauthor"><b>${esc(a?.nome||b.artista_nome||'Artista UnderFy')} <span class="badge">✓</span></b><small data-followers-artist="${esc(aid||'')}">${formatarNumero(contadoresSociais.artistas[String(aid)]||0)} seguidores</small></div></div><div class="btext">${esc(b.texto||b.conteudo||b.letra||'Barra')}</div>${(b.audio_url||b.audio||b.url_audio)?`<audio class="audio" controls src="${esc(b.audio_url||b.audio||b.url_audio)}"></audio>`:''}<div class="pub-stats"><span class="bar-stat-action ${likes?'active':''}" onclick="event.stopPropagation();toggleBarraLike('${esc(key)}')" title="${likes?'Descurtir':'Curtir'}"><i data-lucide="heart"></i> ${formatarNumero(likesCount)}</span><span class="bar-stat-action ${reps?'active':''}" onclick="event.stopPropagation();toggleBarraRepost('${esc(key)}')" title="${reps?'Remover repost':'Repostar'}"><i data-lucide="repeat-2"></i> ${formatarNumero(repsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();toggleBarraComments('${esc(key)}')" title="Ver/comentar"><i data-lucide="message-circle"></i> ${formatarNumero(commentsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();compartilharBarra(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="Compartilhar"><i data-lucide="share-2"></i></span></div><div id="comments-${esc(key)}" class="bar-comments"><div>${comments.map(c=>`<div class="comment-item"><b>${esc(c.nome||c.ouvinte_nome||'Ouvinte')}</b> ${esc(c.texto||'')}</div>`).join('')}</div><textarea id="commentText-${esc(key)}" placeholder="Comente nesta Barra..."></textarea><button class="follow-btn" style="margin-top:7px" onclick="enviarComentarioBarra('${esc(key)}')">Comentar</button></div></article>`;
 }
 
 function toggleBarraLike(id){let a=getSocial('barraLikes');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraLikes',a);const k=String(id);contadoresSociais.barrasCurtidas[k]=Math.max(0,(contadoresSociais.barrasCurtidas[k]||0)+(i<0?1:-1));if(db&&usuarioAtual)sincronizarSocialDb('barras_curtidas',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
