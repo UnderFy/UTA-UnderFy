@@ -7,6 +7,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <meta name="theme-color" content="#080808">
+<link rel="preconnect" href="https://gnibzbnypirjrcaoibkx.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="//gnibzbnypirjrcaoibkx.supabase.co">
 
 <title>UnderFy • UTA — Ouvintes</title>
 
@@ -2803,30 +2806,35 @@ INIT
 function init(){
 
     icones();
-    iniciarAutenticacao();
+
+    // Conecta o Supabase ANTES da autenticação.
+    // Na versão anterior iniciarAutenticacao() era chamado antes de db existir.
+    if(
+        SUPABASE_URL &&
+        SUPABASE_ANON_KEY &&
+        window.supabase
+    ){
+        db=window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY,
+            {
+                auth:{
+                    persistSession:true,
+                    autoRefreshToken:true,
+                    detectSessionInUrl:true
+                }
+            }
+        );
+
+        iniciarAutenticacao();
+        // Os dados públicos carregam sem bloquear a interface.
+        carregarDadosUnderFy().catch(()=>{});
+    }
 
     renderizarBiblioteca();
-
     renderizarContinue();
     renderizarParaVoce();
     carregarStories();
-
-
-    if(
-        SUPABASE_URL &&
-        SUPABASE_ANON_KEY
-    ){
-
-        db=
-        window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-        );
-
-
-        carregarDadosUnderFy();
-
-    }
 
 }
 
@@ -4858,15 +4866,47 @@ V5.2 — CONTA DO OUVINTE
 
 async function iniciarAutenticacao(){
     if(!db) return;
-    const {data}=await db.auth.getSession();
-    usuarioAtual=data?.session?.user||null;
-    if(usuarioAtual) await carregarPerfilOuvinte();
-    db.auth.onAuthStateChange(async (_event,session)=>{
+
+    // Recupera a sessão primeiro para a UI aparecer imediatamente.
+    try{
+        const {data}=await db.auth.getSession();
+        usuarioAtual=data?.session?.user||null;
+        if(usuarioAtual){
+            perfilOuvinte={
+                id:usuarioAtual.id,
+                nome:usuarioAtual.user_metadata?.nome||usuarioAtual.email?.split('@')[0]||'Ouvinte',
+                avatar_url:usuarioAtual.user_metadata?.avatar_url||''
+            };
+            renderizarBiblioteca();
+            atualizarPerfilHeader();
+            // Perfil completo em segundo plano.
+            carregarPerfilOuvinte().then(()=>{
+                renderizarBiblioteca();
+                atualizarPerfilHeader();
+            }).catch(()=>{});
+        }
+    }catch(e){}
+
+    // Nunca bloqueia o callback do Supabase esperando outra consulta.
+    db.auth.onAuthStateChange((_event,session)=>{
         usuarioAtual=session?.user||null;
-        if(usuarioAtual) await carregarPerfilOuvinte();
-        else perfilOuvinte=null;
-        renderizarBiblioteca();
-        atualizarPerfilHeader();
+        if(usuarioAtual){
+            perfilOuvinte={
+                id:usuarioAtual.id,
+                nome:usuarioAtual.user_metadata?.nome||usuarioAtual.email?.split('@')[0]||'Ouvinte',
+                avatar_url:usuarioAtual.user_metadata?.avatar_url||''
+            };
+            renderizarBiblioteca();
+            atualizarPerfilHeader();
+            Promise.resolve().then(()=>carregarPerfilOuvinte()).then(()=>{
+                renderizarBiblioteca();
+                atualizarPerfilHeader();
+            }).catch(()=>{});
+        }else{
+            perfilOuvinte=null;
+            renderizarBiblioteca();
+            atualizarPerfilHeader();
+        }
     });
 }
 
@@ -4902,35 +4942,93 @@ function renderAuthCadastro(){
 
 function authErro(msg){ const e=document.getElementById('authError'); if(e)e.textContent=msg||''; }
 
+let authProcessando=false;
+
+function definirBotaoAuth(texto,disabled){
+    const b=document.querySelector('.auth-primary');
+    if(!b)return;
+    b.disabled=!!disabled;
+    b.style.opacity=disabled?'0.65':'';
+    b.textContent=texto;
+}
+
 async function criarConta(){
+    if(authProcessando) return;
     if(!db){authErro('Supabase não conectado.');return;}
     const nome=document.getElementById('authName')?.value.trim();
     const email=document.getElementById('authEmail')?.value.trim();
     const senha=document.getElementById('authPassword')?.value||'';
     if(!nome||!email||senha.length<6){authErro('Preencha nome, e-mail e uma senha com pelo menos 6 caracteres.');return;}
-    authErro('Criando conta...');
-    const {data,error}=await db.auth.signUp({email,password:senha,options:{data:{nome}}});
-    if(error){authErro(error.message);return;}
-    usuarioAtual=data.user||null;
-    if(usuarioAtual){
-        const {data:perfil}=await db.from('perfis_ouvintes').upsert({id:usuarioAtual.id,nome,avatar_url:null},{onConflict:'id'}).select().single();
-        perfilOuvinte=perfil||{id:usuarioAtual.id,nome};
+
+    authProcessando=true;
+    definirBotaoAuth('Criando...',true);
+    authErro('');
+
+    try{
+        const {data,error}=await db.auth.signUp({email,password:senha,options:{data:{nome}}});
+        if(error){authErro(error.message);return;}
+
+        usuarioAtual=data.user||null;
+        if(usuarioAtual){
+            // Mostra a conta imediatamente. A gravação do perfil acontece em segundo plano.
+            perfilOuvinte={id:usuarioAtual.id,nome,avatar_url:''};
+            if(data.session){
+                abrirPerfil();
+                db.from('perfis_ouvintes')
+                    .upsert({id:usuarioAtual.id,nome,avatar_url:null},{onConflict:'id'})
+                    .select().single()
+                    .then(({data:perfil})=>{if(perfil)perfilOuvinte=perfil;})
+                    .catch(()=>{});
+            }else{
+                authErro('Conta criada! Verifique seu e-mail para confirmar a conta.');
+            }
+        }else{
+            authErro('Conta criada! Verifique seu e-mail para confirmar a conta.');
+        }
+    }finally{
+        authProcessando=false;
+        if(document.getElementById('authView')) definirBotaoAuth('Criar conta',false);
     }
-    if(data.session){ abrirPerfil(); } else { authErro('Conta criada. Verifique seu e-mail para confirmar a conta antes de entrar.'); }
 }
 
 async function entrarConta(){
+    if(authProcessando) return;
     if(!db){authErro('Supabase não conectado.');return;}
     const email=document.getElementById('authEmail')?.value.trim();
     const senha=document.getElementById('authPassword')?.value||'';
     if(!email||!senha){authErro('Informe seu e-mail e sua senha.');return;}
-    authErro('Entrando...');
-    const {data,error}=await db.auth.signInWithPassword({email,password:senha});
-    if(error){authErro(error.message);return;}
-    usuarioAtual=data.user;
-    await carregarPerfilOuvinte();
-    abrirPerfil();
-    await sincronizarBibliotecaConta();
+
+    authProcessando=true;
+    definirBotaoAuth('Entrando...',true);
+    authErro('');
+
+    try{
+        const {data,error}=await db.auth.signInWithPassword({email,password:senha});
+        if(error){authErro(error.message);return;}
+
+        usuarioAtual=data.user;
+        // Entra sem esperar perfil, curtidas, histórico ou playlists.
+        // Essas informações são sincronizadas em segundo plano.
+        perfilOuvinte={
+            id:usuarioAtual.id,
+            nome:usuarioAtual.user_metadata?.nome||email.split('@')[0]||'Ouvinte',
+            avatar_url:usuarioAtual.user_metadata?.avatar_url||''
+        };
+        abrirPerfil();
+
+        Promise.allSettled([
+            carregarPerfilOuvinte(),
+            sincronizarBibliotecaConta()
+        ]).then(()=>{
+            renderizarBiblioteca();
+            renderizarBarras();
+            renderizarParaVoce();
+            atualizarPerfilHeader();
+        });
+    }finally{
+        authProcessando=false;
+        if(document.getElementById('authView')) definirBotaoAuth('Entrar',false);
+    }
 }
 
 async function sairConta(){
