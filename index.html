@@ -2732,6 +2732,7 @@ const SUPABASE_ANON_KEY="sb_publishable_b9yvSbmWOLVJvq4AB4CLmQ_VRuzpG5T";
 
 
 let db=null;
+let dbPublic=null;
 let usuarioAtual=null;
 let perfilOuvinte=null;
 let authModo="login";
@@ -2827,8 +2828,66 @@ function icones(){
 INIT
 ========================================= */
 
+const PUBLIC_CACHE_KEY='underfy_public_cache_v2';
+// V5.13: cliente público separado para impedir que o login altere o conteúdo público.
+const PUBLIC_CACHE_OLD_KEY='underfy_public_cache_v1';
+const PUBLIC_STATE={
+    artistas:'idle',musicas:'idle',musicaArtistas:'idle',projetos:'idle',
+    projetoMusicas:'idle',barras:'idle',comentariosBarras:'idle'
+};
+
+function carregarCachePublico(){
+    try{
+        let c=null;
+        // V2 é a fonte principal. V1 continua sendo aceito para não perder
+        // instalações feitas antes desta correção.
+        for(const key of [PUBLIC_CACHE_KEY,PUBLIC_CACHE_OLD_KEY]){
+            try{
+                const x=JSON.parse(localStorage.getItem(key)||'null');
+                if(x && typeof x==='object'){
+                    const total=['artistas','musicas','barras','projetos'].reduce((n,k)=>n+(Array.isArray(x[k])?x[k].length:0),0);
+                    if(total>0 || !c) c=x;
+                    if(total>0) break;
+                }
+            }catch(e){}
+        }
+        if(!c) return;
+        if(Array.isArray(c.artistas) && c.artistas.length) artistas=c.artistas;
+        if(Array.isArray(c.musicas) && c.musicas.length) musicas=c.musicas;
+        if(Array.isArray(c.musicaArtistas) && c.musicaArtistas.length) musicaArtistas=c.musicaArtistas;
+        if(Array.isArray(c.projetos) && c.projetos.length) projetos=c.projetos;
+        if(Array.isArray(c.projetoMusicas) && c.projetoMusicas.length) projetoMusicas=c.projetoMusicas;
+        if(Array.isArray(c.barras) && c.barras.length) barras=c.barras;
+        if(Array.isArray(c.comentariosBarras) && c.comentariosBarras.length) comentariosBarras=c.comentariosBarras;
+    }catch(e){ console.warn('Cache público indisponível:',e); }
+}
+
+function temConteudoPublico(){
+    return artistas.length || musicas.length || barras.length || projetos.length;
+}
+
+function salvarCachePublico(){
+    // Nunca grava um snapshot totalmente vazio por cima de um snapshot válido.
+    if(!temConteudoPublico()) return;
+    const payload={version:2,saved_at:new Date().toISOString(),artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras};
+    try{
+        const anterior=localStorage.getItem(PUBLIC_CACHE_KEY);
+        if(anterior) localStorage.setItem(PUBLIC_CACHE_KEY+'_backup',anterior);
+        localStorage.setItem(PUBLIC_CACHE_KEY,JSON.stringify(payload));
+        // Também mantém V1 por compatibilidade com versões anteriores.
+        localStorage.setItem(PUBLIC_CACHE_OLD_KEY,JSON.stringify(payload));
+    }catch(e){ console.warn('Não foi possível salvar cache público:',e); }
+}
+
+async function atualizarConteudoPublico(){
+    if(!dbPublic) return;
+    await carregarDadosUnderFy();
+}
+
 function init(){
 
+    carregarCachePublico();
+    carregarContadoresSociaisCache();
     icones();
 
     // Conecta o Supabase ANTES da autenticação.
@@ -2838,6 +2897,7 @@ function init(){
         SUPABASE_ANON_KEY &&
         window.supabase
     ){
+        // Cliente autenticado: usado somente para dados privados/ações do ouvinte.
         db=window.supabase.createClient(
             SUPABASE_URL,
             SUPABASE_ANON_KEY,
@@ -2846,6 +2906,22 @@ function init(){
                     persistSession:true,
                     autoRefreshToken:true,
                     detectSessionInUrl:true
+                }
+            }
+        );
+
+        // Cliente público SEPARADO: as consultas de conteúdo público não podem
+        // mudar de comportamento quando o visitante faz login. Com um segundo
+        // cliente sem persistência de sessão, Artistas/Guias/Barras/Stories e
+        // contadores continuam sendo consultados como visitante anônimo.
+        dbPublic=window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY,
+            {
+                auth:{
+                    persistSession:false,
+                    autoRefreshToken:false,
+                    detectSessionInUrl:false
                 }
             }
         );
@@ -3180,9 +3256,10 @@ function curtirMusica(m){
 
     setStorage(STORAGE.curtidas,lista);
 
-    // V5.9 — contador da Guia muda imediatamente, sem esperar o banco.
+    // V5.11 — contador da Guia muda imediatamente, sem esperar o banco.
     const k=String(m.id);
     contadoresSociais.musicasCurtidas[k]=Math.max(0,(contadoresSociais.musicasCurtidas[k]||0)+(existe?-1:1));
+    salvarContadoresSociais();
 
     // Mantém a curtida sincronizada na conta do ouvinte.
     if(db&&usuarioAtual){
@@ -3846,53 +3923,76 @@ function encontrarArtista(id){
 }
 
 async function carregarDadosUnderFy(){
-    if(!db) return;
+    if(!dbPublic) return;
 
-    try{
-        const [a,m,r,p,pm,b,bc] = await Promise.all([
-            db.from('artistas').select('*').order('nome',{ascending:true}),
-            db.from('musicas').select('*').order('created_at',{ascending:false}).limit(100),
-            db.from('musica_artistas').select('*'),
-            db.from('projetos').select('*').order('created_at',{ascending:false}),
-            db.from('projeto_musicas').select('*'),
-            db.from('barras').select('*').order('created_at',{ascending:false}).limit(50),
-            db.from('barras_comentarios').select('*').order('created_at',{ascending:false}).limit(500)
-        ]);
+    const consultas=[
+        ['artistas',()=>dbPublic.from('artistas').select('*').order('nome',{ascending:true})],
+        ['musicas',()=>dbPublic.from('musicas').select('*').order('created_at',{ascending:false}).limit(100)],
+        ['musicaArtistas',()=>dbPublic.from('musica_artistas').select('*')],
+        ['projetos',()=>dbPublic.from('projetos').select('*').order('created_at',{ascending:false})],
+        ['projetoMusicas',()=>dbPublic.from('projeto_musicas').select('*')],
+        ['barras',()=>dbPublic.from('barras').select('*').order('created_at',{ascending:false}).limit(50)],
+        ['comentariosBarras',()=>dbPublic.from('barras_comentarios').select('*').order('created_at',{ascending:false}).limit(500)]
+    ];
 
-        if(a.error) console.error('Erro artistas:',a.error);
-        if(m.error) console.error('Erro músicas:',m.error);
-        if(r.error) console.error('Erro relações música/artista:',r.error);
-        if(p.error) console.error('Erro projetos:',p.error);
-        if(pm.error) console.error('Erro projeto_musicas:',pm.error);
-        if(b.error) console.error('Erro Barras:',b.error);
+    for(let tentativa=0;tentativa<3;tentativa++){
+        const resultados=await Promise.all(consultas.map(async([nome,fn])=>{
+            try{
+                const r=await fn();
+                return [nome,r?.data,r?.error||null];
+            }catch(error){
+                return [nome,null,error];
+            }
+        }));
 
-        artistas=a.data||[];
-        musicas=m.data||[];
-        musicaArtistas=r.data||[];
-        projetos=p.data||[];
-        projetoMusicas=pm.data||[];
-        barras=b.data||[];
-        comentariosBarras=bc?.data||[];
+        let alterou=false;
+        for(const [nome,data,error] of resultados){
+            if(error){
+                PUBLIC_STATE[nome]='error';
+                console.warn('UnderFy: falha ao carregar '+nome,error);
+                continue;
+            }
+            PUBLIC_STATE[nome]='ok';
+            if(!Array.isArray(data)) continue;
 
-        // Renderização imediata: os contadores sociais chegam em segundo plano.
+            // REGRA CRÍTICA: uma resposta vazia nunca destrói um conjunto de
+            // dados que já temos em memória/cache. Isso protege contra RLS,
+            // sessão ainda inicializando, falha transitória ou consulta vazia.
+            const atual=({artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras})[nome];
+            if(data.length===0 && Array.isArray(atual) && atual.length>0) continue;
+
+            if(nome==='artistas') artistas=data;
+            else if(nome==='musicas') musicas=data;
+            else if(nome==='musicaArtistas') musicaArtistas=data;
+            else if(nome==='projetos') projetos=data;
+            else if(nome==='projetoMusicas') projetoMusicas=data;
+            else if(nome==='barras') barras=data;
+            else if(nome==='comentariosBarras') comentariosBarras=data;
+            alterou=true;
+        }
+
+        if(alterou || temConteudoPublico()) break;
+        if(tentativa<2) await new Promise(r=>setTimeout(r,[600,1400][tentativa]||1400));
+    }
+
+    salvarCachePublico();
+
+    renderizarArtistas();
+    renderizarMusicas();
+    renderizarProjetosUnderFy();
+    renderizarBarras();
+    renderizarParaVoce();
+    carregarStories();
+    icones();
+
+    carregarContadoresSociais().then(()=>{
         renderizarArtistas();
         renderizarMusicas();
-        renderizarProjetosUnderFy();
         renderizarBarras();
         renderizarParaVoce();
-        carregarStories();
-        icones();
-        carregarContadoresSociais().then(()=>{
-            renderizarArtistas();
-            renderizarMusicas();
-            renderizarBarras();
-            renderizarParaVoce();
-            if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
-            if(document.getElementById('listenerOverlay')?.classList.contains('open')) abrirPerfilOuvinte();
-        });
-    }catch(err){
-        console.error('Erro geral ao carregar UnderFy:',err);
-    }
+        if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
+        if(document.getElementById('listenerOverlay')?.classList.contains('open')) abrirPerfilOuvinte();
+    });
 }
 
 function renderizarProjetosUnderFy(){
@@ -3917,12 +4017,12 @@ CARREGAR MÚSICAS
 ========================================= */
 
 async function carregarMusicas(){
-    if(!db) return;
-    const r=await db.from('musicas').select('*').order('created_at',{ascending:false}).limit(100);
+    if(!dbPublic) return;
+    const r=await dbPublic.from('musicas').select('*').order('created_at',{ascending:false}).limit(100);
     if(r.error){ console.error('Erro ao carregar músicas:',r.error); return; }
     musicas=r.data||[];
     if(!musicaArtistas.length){
-        const rel=await db.from('musica_artistas').select('*');
+        const rel=await dbPublic.from('musica_artistas').select('*');
         musicaArtistas=rel.data||[];
     }
     renderizarMusicas();
@@ -3937,7 +4037,7 @@ RENDER MÚSICAS
 function renderizarMusicas(){
     let el=document.getElementById('tracks');
     if(!el) return;
-    if(!musicas.length){ el.innerHTML=`<div class="empty">Nenhuma música encontrada.</div>`; return; }
+    if(!musicas.length){ el.innerHTML=`<div class="empty">${PUBLIC_STATE.musicas==='error'?'Não foi possível carregar as Guias agora. Tente atualizar novamente.':'Nenhuma música encontrada.'}</div>`; return; }
     el.innerHTML=musicas.map((m,i)=>{
         const liked=getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id));
         const likesCount=contadoresSociais.musicasCurtidas[String(m.id)]||0;
@@ -3962,8 +4062,31 @@ const SOCIAL_STORAGE={
     follows:'underfy_follows',
     barraLikes:'underfy_barra_likes',
     barraReposts:'underfy_barra_reposts',
-    barraComments:'underfy_barra_comments'
+    barraComments:'underfy_barra_comments',
+    counters:'underfy_social_counters_v1'
 };
+
+// Persistência local dos contadores: os números não voltam para zero
+// enquanto o banco ainda está carregando ou caso a conexão falhe.
+function salvarContadoresSociais(){
+    try{ localStorage.setItem(SOCIAL_STORAGE.counters,JSON.stringify(contadoresSociais)); }catch(e){}
+}
+function carregarContadoresSociaisCache(){
+    try{
+        const c=JSON.parse(localStorage.getItem(SOCIAL_STORAGE.counters)||'null');
+        if(c && typeof c==='object'){
+            contadoresSociais={
+                artistas:c.artistas||{},
+                musicasCurtidas:c.musicasCurtidas||{},
+                barrasCurtidas:c.barrasCurtidas||{},
+                barrasReposts:c.barrasReposts||{},
+                barrasComentarios:c.barrasComentarios||{}
+            };
+        }
+    }catch(e){}
+}
+
+carregarContadoresSociaisCache();
 
 function getSocial(nome){ return getStorage(SOCIAL_STORAGE[nome]); }
 function setSocial(nome,dados){ setStorage(SOCIAL_STORAGE[nome],dados); }
@@ -3990,7 +4113,7 @@ async function carregarStories(){
     stories=[];
     if(db){
         try{
-            const r=await db.from('stories').select('*').order('created_at',{ascending:false}).limit(100);
+            const r=await dbPublic.from('stories').select('*').order('created_at',{ascending:false}).limit(100);
             if(!r.error) stories=r.data||[];
         }catch(e){}
     }
@@ -4099,6 +4222,7 @@ function toggleSeguirArtista(id){
 
     const k=String(id);
     contadoresSociais.artistas[k]=Math.max(0,(contadoresSociais.artistas[k]||0)+(seguindoAgora?1:-1));
+    salvarContadoresSociais();
 
     // Atualização imediata: o número de seguidores muda no mesmo toque, sem esperar a rede.
     atualizarContadoresSeguidoresVisiveis(k);
@@ -4143,11 +4267,14 @@ function renderBarra(b){
     return `<article class="barra" data-barra-id="${esc(key)}"><div class="bhead" onclick="abrirPerfilArtista('${esc(aid||'')}')"><img src="${esc(a?.foto_url||PH)}" onerror="this.src='${PH}'"><div class="bauthor"><b>${esc(a?.nome||b.artista_nome||'Artista UnderFy')} <span class="badge">✓</span></b><small data-followers-artist="${esc(aid||'')}">${formatarNumero(contadoresSociais.artistas[String(aid)]||0)} seguidores</small></div></div><div class="btext">${esc(b.texto||b.conteudo||b.letra||'Barra')}</div>${(b.audio_url||b.audio||b.url_audio)?`<audio class="audio" controls src="${esc(b.audio_url||b.audio||b.url_audio)}"></audio>`:''}<div class="pub-stats"><span class="bar-stat-action ${likes?'active':''}" onclick="event.stopPropagation();toggleBarraLike('${esc(key)}')" title="${likes?'Descurtir':'Curtir'}"><i data-lucide="heart"></i> ${formatarNumero(likesCount)}</span><span class="bar-stat-action ${reps?'active':''}" onclick="event.stopPropagation();toggleBarraRepost('${esc(key)}')" title="${reps?'Remover repost':'Repostar'}"><i data-lucide="repeat-2"></i> ${formatarNumero(repsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();toggleBarraComments('${esc(key)}')" title="Ver/comentar"><i data-lucide="message-circle"></i> ${formatarNumero(commentsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();compartilharBarra(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="Compartilhar"><i data-lucide="share-2"></i></span></div><div id="comments-${esc(key)}" class="bar-comments"><div>${comments.map(c=>`<div class="comment-item"><b>${esc(c.nome||c.ouvinte_nome||'Ouvinte')}</b> ${esc(c.texto||'')}</div>`).join('')}</div><textarea id="commentText-${esc(key)}" placeholder="Comente nesta Barra..."></textarea><button class="follow-btn" style="margin-top:7px" onclick="enviarComentarioBarra('${esc(key)}')">Comentar</button></div></article>`;
 }
 
-function toggleBarraLike(id){let a=getSocial('barraLikes');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraLikes',a);const k=String(id);contadoresSociais.barrasCurtidas[k]=Math.max(0,(contadoresSociais.barrasCurtidas[k]||0)+(i<0?1:-1));if(db&&usuarioAtual)sincronizarSocialDb('barras_curtidas',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
-function toggleBarraRepost(id){let a=getSocial('barraReposts');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraReposts',a);const k=String(id);contadoresSociais.barrasReposts[k]=Math.max(0,(contadoresSociais.barrasReposts[k]||0)+(i<0?1:-1));if(db&&usuarioAtual)sincronizarSocialDb('barras_reposts',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
+function toggleBarraLike(id){let a=getSocial('barraLikes');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraLikes',a);const k=String(id);contadoresSociais.barrasCurtidas[k]=Math.max(0,(contadoresSociais.barrasCurtidas[k]||0)+(i<0?1:-1));
+    salvarContadoresSociais();if(db&&usuarioAtual)sincronizarSocialDb('barras_curtidas',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
+function toggleBarraRepost(id){let a=getSocial('barraReposts');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraReposts',a);const k=String(id);contadoresSociais.barrasReposts[k]=Math.max(0,(contadoresSociais.barrasReposts[k]||0)+(i<0?1:-1));
+    salvarContadoresSociais();if(db&&usuarioAtual)sincronizarSocialDb('barras_reposts',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
 async function sincronizarSocialDb(tabela,registro,adicionar){try{if(adicionar)await db.from(tabela).upsert(registro,{onConflict:'ouvinte_id,barra_id'});else await db.from(tabela).delete().eq('ouvinte_id',registro.ouvinte_id).eq('barra_id',registro.barra_id);}catch(e){}}
 function toggleBarraComments(id){document.getElementById('comments-'+id)?.classList.toggle('open');}
-function enviarComentarioBarra(id){const ta=document.getElementById('commentText-'+id);const texto=ta?.value.trim();if(!texto)return;const a=getSocial('barraComments');a.push({barra_id:id,texto,nome:perfilOuvinte?.nome||'Ouvinte'});setSocial('barraComments',a);const k=String(id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;if(db&&usuarioAtual){(async()=>{try{await db.from('barras_comentarios').insert({barra_id:id,ouvinte_id:usuarioAtual.id,texto});}catch(e){}})();}renderizarBarras();toggleBarraComments(id);}
+function enviarComentarioBarra(id){const ta=document.getElementById('commentText-'+id);const texto=ta?.value.trim();if(!texto)return;const a=getSocial('barraComments');a.push({barra_id:id,texto,nome:perfilOuvinte?.nome||'Ouvinte'});setSocial('barraComments',a);const k=String(id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;
+    salvarContadoresSociais();if(db&&usuarioAtual){(async()=>{try{await db.from('barras_comentarios').insert({barra_id:id,ouvinte_id:usuarioAtual.id,texto});}catch(e){}})();}renderizarBarras();toggleBarraComments(id);}
 
 function formatarNumero(n){
     n=Number(n)||0;
@@ -4157,22 +4284,42 @@ function formatarNumero(n){
 }
 
 async function carregarContadoresSociais(){
-    if(!db) return;
-    contadoresSociais={artistas:{},musicasCurtidas:{},barrasCurtidas:{},barrasReposts:{},barrasComentarios:{}};
+    if(!dbPublic) return;
     try{
         const [f,l,bl,br,bc]=await Promise.all([
-            db.from('artistas_seguidos').select('artista_id'),
-            db.from('musicas_curtidas').select('musica_id'),
-            db.from('barras_curtidas').select('barra_id'),
-            db.from('barras_reposts').select('barra_id'),
-            db.from('barras_comentarios').select('barra_id')
+            dbPublic.from('artistas_seguidos').select('artista_id'),
+            dbPublic.from('musicas_curtidas').select('musica_id'),
+            dbPublic.from('barras_curtidas').select('barra_id'),
+            dbPublic.from('barras_reposts').select('barra_id'),
+            dbPublic.from('barras_comentarios').select('barra_id')
         ]);
-        (f.data||[]).forEach(x=>{const k=String(x.artista_id);contadoresSociais.artistas[k]=(contadoresSociais.artistas[k]||0)+1;});
-        (l.data||[]).forEach(x=>{const k=String(x.musica_id);contadoresSociais.musicasCurtidas[k]=(contadoresSociais.musicasCurtidas[k]||0)+1;});
-        (bl.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasCurtidas[k]=(contadoresSociais.barrasCurtidas[k]||0)+1;});
-        (br.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasReposts[k]=(contadoresSociais.barrasReposts[k]||0)+1;});
-        (bc.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;});
-    }catch(e){}
+
+        // Só substitui cada contador quando a consulta correspondente funcionou.
+        // Isso evita apagar os números locais por causa de erro de RLS/rede.
+        if(!f.error){
+            const x={}; (f.data||[]).forEach(r=>{const k=String(r.artista_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.artistas=x;
+        }
+        if(!l.error){
+            const x={}; (l.data||[]).forEach(r=>{const k=String(r.musica_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.musicasCurtidas=x;
+        }
+        if(!bl.error){
+            const x={}; (bl.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.barrasCurtidas=x;
+        }
+        if(!br.error){
+            const x={}; (br.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.barrasReposts=x;
+        }
+        if(!bc.error){
+            const x={}; (bc.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.barrasComentarios=x;
+        }
+        salvarContadoresSociais();
+    }catch(e){
+        // Mantém o último cache válido em caso de falha.
+    }
 }
 
 function abrirPerfilOuvinte(){
