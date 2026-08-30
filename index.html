@@ -4138,11 +4138,11 @@ function renderizarParaVoce(){
         <b>${esc(m.titulo||m.nome||'Guia')}</b>
         <span>${esc(artistasDaMusica(m))}</span>
         <div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div>
-    </div>`).join(''):`<div class="empty">Ainda não há recomendações.</div>`;
+    </div>`}).join(''):`<div class="empty">Ainda não há recomendações.</div>`;
     icones();
 }
 
-async async function carregarStories(){
+async function carregarStories(){
     const el=document.getElementById('stories');
     if(!el) return;
     stories=[];
