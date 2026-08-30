@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="//gnibzbnypirjrcaoibkx.supabase.co">
 
-<title>UnderFy • UTA — Ouvintes</title>
+<title>UnderFy • UTA</title>
 
 <style>
 
@@ -1886,7 +1886,7 @@ MOBILE
     <div class="hero-content">
 
         <div class="eyebrow">
-            UNDERFY PARA OUVINTES
+            UNDERFY • UTA
         </div>
 
         <h1>
@@ -3167,45 +3167,33 @@ CURTIR
 
 function curtirMusica(m){
 
-    if(!m)
-        return;
+    if(!m) return;
 
-
-    let lista=
-    getStorage(STORAGE.curtidas);
-
-
-    let existe=
-    lista.some(
-        x=>String(x.id)===String(m.id)
-    );
-
+    let lista=getStorage(STORAGE.curtidas);
+    const existe=lista.some(x=>String(x.id)===String(m.id));
 
     if(existe){
-
-        lista=
-        lista.filter(
-            x=>String(x.id)!==String(m.id)
-        );
-
+        lista=lista.filter(x=>String(x.id)!==String(m.id));
     }else{
-
-        lista.unshift(
-            simplificarMusica(m)
-        );
-
+        lista.unshift(simplificarMusica(m));
     }
 
+    setStorage(STORAGE.curtidas,lista);
 
-    setStorage(
-        STORAGE.curtidas,
-        lista
-    );
+    // V5.9 — contador da Guia muda imediatamente, sem esperar o banco.
+    const k=String(m.id);
+    contadoresSociais.musicasCurtidas[k]=Math.max(0,(contadoresSociais.musicasCurtidas[k]||0)+(existe?-1:1));
 
+    // Mantém a curtida sincronizada na conta do ouvinte.
+    if(db&&usuarioAtual){
+        sincronizarAcao('curtidas',m,!existe).catch(e=>console.warn('Não foi possível sincronizar a curtida:',e));
+    }
 
     renderizarBiblioteca();
-
     renderizarMusicas();
+    renderizarParaVoce();
+    if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
+    atualizarLikePlayer();
 
 }
 
@@ -3955,11 +3943,11 @@ function renderizarMusicas(){
         const likesCount=contadoresSociais.musicasCurtidas[String(m.id)]||0;
         return `<div class="track" onclick="tocar(${i})">
             <img class="cover" src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'">
-            <div class="tinfo"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>${esc(artistasDaMusica(m))}</span><div class="pub-stats"><span><i data-lucide="heart"></i> ${formatarNumero(likesCount)}</span></div></div>
-            <div class="track-actions">
-                <button class="like-btn ${liked?'liked':''}" onclick="event.stopPropagation();curtirMusica(musicas[${i}])"><i data-lucide="heart"></i></button>
-                <button class="share-btn" aria-label="Compartilhar guia" onclick="event.stopPropagation();compartilharGuia(musicas[${i}])"><i data-lucide="share-2"></i></button>
-                <button class="play" onclick="event.stopPropagation();tocar(${i})"><i data-lucide="play"></i></button>
+            <div class="tinfo"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>${esc(artistasDaMusica(m))}</span></div>
+            <div class="pub-stats guide-samples">
+                <span class="guide-like-sample ${liked?'active':''}" onclick="event.stopPropagation();curtirMusica(musicas[${i}])" title="${liked?'Descurtir':'Curtir'}">
+                    <i data-lucide="heart"></i> ${formatarNumero(likesCount)}
+                </span>
             </div>
         </div>`;
     }).join('');
@@ -3991,8 +3979,7 @@ function renderizarParaVoce(){
         <img src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'">
         <b>${esc(m.titulo||m.nome||'Guia')}</b>
         <span>${esc(artistasDaMusica(m))}</span>
-        <div class="pub-stats"><span><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div>
-        <button class="share-btn" style="margin-top:8px" onclick="event.stopPropagation();compartilharGuia(${JSON.stringify(m).replace(/"/g,'&quot;')})"><i data-lucide="share-2"></i></button>
+        <div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div>
     </div>`).join(''):`<div class="empty">Ainda não há recomendações.</div>`;
     icones();
 }
@@ -4085,7 +4072,7 @@ function renderizarPerfilArtista(a,tab='guias'){
     let content='';
     if(tab==='barras') content=lista.length?`<div class="profile-bar-list">${lista.map(renderBarra).join('')}</div>`:`<div class="empty">Nenhuma Barra publicada.</div>`;
     else if(tab==='projetos') content=lista.length?`<div class="profile-grid">${lista.map(p=>`<div class="profile-tile"><img src="${esc(p.capa_url||p.capa||PH)}" onerror="this.src='${PH}'"><b>${esc(p.nome||'Projeto')}</b><span>Projeto</span></div>`).join('')}</div>`:`<div class="empty">Nenhum projeto encontrado.</div>`;
-    else content=lista.length?`<div class="profile-grid">${lista.map(m=>`<div class="profile-tile" onclick="tocarPorId('${esc(m.id)}')"><img src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>Guia publicada</span><div class="pub-stats"><span><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div></div>`).join('')}</div>`:`<div class="empty">Nada publicado nesta aba.</div>`;
+    else content=lista.length?`<div class="profile-grid">${lista.map(m=>`<div class="profile-tile" onclick="tocarPorId('${esc(m.id)}')"><img src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>Guia publicada</span><div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div></div>`).join('')}</div>`:`<div class="empty">Nada publicado nesta aba.</div>`;
     const following=seguido(a.id);
     const followers=contadoresSociais.artistas[String(a.id)]||0;
     document.getElementById('artistProfile').innerHTML=`<div class="profile-cover"></div><div class="profile-body">
