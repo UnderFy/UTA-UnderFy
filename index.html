@@ -5224,17 +5224,14 @@ async function carregarPerfilOuvinte(){
 }
 
 function abrirPerfil(){
+    if(usuarioAtual){ abrirPerfilOuvinte(); return; }
     const view=document.getElementById('authView');
     if(!view) return;
-
     if(usuarioAtual){
         const nome=perfilOuvinte?.nome||usuarioAtual.user_metadata?.nome||'Ouvinte UnderFy';
         const avatar=perfilOuvinte?.avatar_url||PH;
         view.innerHTML=`<div class="account-row"><img class="account-avatar" src="${esc(avatar)}" onerror="this.src='${PH}'"><div><div class="account-name">${esc(nome)}</div><div class="account-email">${esc(usuarioAtual.email||'')}</div></div></div><p>Sua conta do UnderFy está conectada.</p><div class="account-actions"><button onclick="fecharOverlay('authOverlay');abrirBiblioteca()"><i data-lucide="library"></i> Abrir biblioteca</button><button class="danger" onclick="sairConta()"><i data-lucide="log-out"></i> Sair da conta</button></div>`;
-    }else{
-        renderAuthLogin();
-    }
-
+    }else renderAuthLogin();
     document.getElementById('authOverlay').classList.add('open');
     icones();
 }
@@ -5354,8 +5351,21 @@ async function sairConta(){
 
     usuarioAtual=null;
     perfilOuvinte=null;
+
+    try{
+        setSocial('follows',[]);
+        setSocial('barraLikes',[]);
+        setSocial('barraReposts',[]);
+        setSocial('barraComments',[]);
+    }catch(e){}
+
     fecharOverlay('authOverlay');
     renderizarBiblioteca();
+    renderizarBarras();
+    renderizarParaVoce();
+
+    if(typeof atualizarPerfilHeader==='function') atualizarPerfilHeader();
+    if(typeof renderAuthLogin==='function') renderAuthLogin();
 }
 
 async function sincronizarBibliotecaConta(){
