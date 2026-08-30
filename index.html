@@ -2827,18 +2827,59 @@ function icones(){
 INIT
 ========================================= */
 
+const PUBLIC_CACHE_KEY='underfy_public_cache_v2';
+const PUBLIC_CACHE_OLD_KEY='underfy_public_cache_v1';
+const PUBLIC_STATE={
+    artistas:'idle',musicas:'idle',musicaArtistas:'idle',projetos:'idle',
+    projetoMusicas:'idle',barras:'idle',comentariosBarras:'idle'
+};
+
 function carregarCachePublico(){
     try{
-        const c=JSON.parse(localStorage.getItem('underfy_public_cache_v1')||'null');
-        if(!c || typeof c!=='object') return;
-        if(Array.isArray(c.artistas)) artistas=c.artistas;
-        if(Array.isArray(c.musicas)) musicas=c.musicas;
-        if(Array.isArray(c.musicaArtistas)) musicaArtistas=c.musicaArtistas;
-        if(Array.isArray(c.projetos)) projetos=c.projetos;
-        if(Array.isArray(c.projetoMusicas)) projetoMusicas=c.projetoMusicas;
-        if(Array.isArray(c.barras)) barras=c.barras;
-        if(Array.isArray(c.comentariosBarras)) comentariosBarras=c.comentariosBarras;
-    }catch(e){}
+        let c=null;
+        // V2 é a fonte principal. V1 continua sendo aceito para não perder
+        // instalações feitas antes desta correção.
+        for(const key of [PUBLIC_CACHE_KEY,PUBLIC_CACHE_OLD_KEY]){
+            try{
+                const x=JSON.parse(localStorage.getItem(key)||'null');
+                if(x && typeof x==='object'){
+                    const total=['artistas','musicas','barras','projetos'].reduce((n,k)=>n+(Array.isArray(x[k])?x[k].length:0),0);
+                    if(total>0 || !c) c=x;
+                    if(total>0) break;
+                }
+            }catch(e){}
+        }
+        if(!c) return;
+        if(Array.isArray(c.artistas) && c.artistas.length) artistas=c.artistas;
+        if(Array.isArray(c.musicas) && c.musicas.length) musicas=c.musicas;
+        if(Array.isArray(c.musicaArtistas) && c.musicaArtistas.length) musicaArtistas=c.musicaArtistas;
+        if(Array.isArray(c.projetos) && c.projetos.length) projetos=c.projetos;
+        if(Array.isArray(c.projetoMusicas) && c.projetoMusicas.length) projetoMusicas=c.projetoMusicas;
+        if(Array.isArray(c.barras) && c.barras.length) barras=c.barras;
+        if(Array.isArray(c.comentariosBarras) && c.comentariosBarras.length) comentariosBarras=c.comentariosBarras;
+    }catch(e){ console.warn('Cache público indisponível:',e); }
+}
+
+function temConteudoPublico(){
+    return artistas.length || musicas.length || barras.length || projetos.length;
+}
+
+function salvarCachePublico(){
+    // Nunca grava um snapshot totalmente vazio por cima de um snapshot válido.
+    if(!temConteudoPublico()) return;
+    const payload={version:2,saved_at:new Date().toISOString(),artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras};
+    try{
+        const anterior=localStorage.getItem(PUBLIC_CACHE_KEY);
+        if(anterior) localStorage.setItem(PUBLIC_CACHE_KEY+'_backup',anterior);
+        localStorage.setItem(PUBLIC_CACHE_KEY,JSON.stringify(payload));
+        // Também mantém V1 por compatibilidade com versões anteriores.
+        localStorage.setItem(PUBLIC_CACHE_OLD_KEY,JSON.stringify(payload));
+    }catch(e){ console.warn('Não foi possível salvar cache público:',e); }
+}
+
+async function atualizarConteudoPublico(){
+    if(!db) return;
+    await carregarDadosUnderFy();
 }
 
 function init(){
@@ -3865,61 +3906,74 @@ function encontrarArtista(id){
 async function carregarDadosUnderFy(){
     if(!db) return;
 
-    try{
-        const [a,m,r,p,pm,b,bc] = await Promise.all([
-            db.from('artistas').select('*').order('nome',{ascending:true}),
-            db.from('musicas').select('*').order('created_at',{ascending:false}).limit(100),
-            db.from('musica_artistas').select('*'),
-            db.from('projetos').select('*').order('created_at',{ascending:false}),
-            db.from('projeto_musicas').select('*'),
-            db.from('barras').select('*').order('created_at',{ascending:false}).limit(50),
-            db.from('barras_comentarios').select('*').order('created_at',{ascending:false}).limit(500)
-        ]);
+    const consultas=[
+        ['artistas',()=>db.from('artistas').select('*').order('nome',{ascending:true})],
+        ['musicas',()=>db.from('musicas').select('*').order('created_at',{ascending:false}).limit(100)],
+        ['musicaArtistas',()=>db.from('musica_artistas').select('*')],
+        ['projetos',()=>db.from('projetos').select('*').order('created_at',{ascending:false})],
+        ['projetoMusicas',()=>db.from('projeto_musicas').select('*')],
+        ['barras',()=>db.from('barras').select('*').order('created_at',{ascending:false}).limit(50)],
+        ['comentariosBarras',()=>db.from('barras_comentarios').select('*').order('created_at',{ascending:false}).limit(500)]
+    ];
 
-        if(a.error) console.error('Erro artistas:',a.error);
-        if(m.error) console.error('Erro músicas:',m.error);
-        if(r.error) console.error('Erro relações música/artista:',r.error);
-        if(p.error) console.error('Erro projetos:',p.error);
-        if(pm.error) console.error('Erro projeto_musicas:',pm.error);
-        if(b.error) console.error('Erro Barras:',b.error);
+    for(let tentativa=0;tentativa<3;tentativa++){
+        const resultados=await Promise.all(consultas.map(async([nome,fn])=>{
+            try{
+                const r=await fn();
+                return [nome,r?.data,r?.error||null];
+            }catch(error){
+                return [nome,null,error];
+            }
+        }));
 
-        // IMPORTANTE: nunca substituir dados existentes por [] quando uma consulta falhar.
-        // Um erro de rede/RLS deve preservar o conteúdo já carregado/cacheado.
-        if(!a.error && Array.isArray(a.data)) artistas=a.data;
-        if(!m.error && Array.isArray(m.data)) musicas=m.data;
-        if(!r.error && Array.isArray(r.data)) musicaArtistas=r.data;
-        if(!p.error && Array.isArray(p.data)) projetos=p.data;
-        if(!pm.error && Array.isArray(pm.data)) projetoMusicas=pm.data;
-        if(!b.error && Array.isArray(b.data)) barras=b.data;
-        if(bc && !bc.error && Array.isArray(bc.data)) comentariosBarras=bc.data;
+        let alterou=false;
+        for(const [nome,data,error] of resultados){
+            if(error){
+                PUBLIC_STATE[nome]='error';
+                console.warn('UnderFy: falha ao carregar '+nome,error);
+                continue;
+            }
+            PUBLIC_STATE[nome]='ok';
+            if(!Array.isArray(data)) continue;
 
-        // Cache local dos dados públicos: se a rede falhar em uma atualização futura,
-        // o último conteúdo válido continua disponível no dispositivo.
-        try{
-            localStorage.setItem('underfy_public_cache_v1',JSON.stringify({
-                artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras
-            }));
-        }catch(e){}
+            // REGRA CRÍTICA: uma resposta vazia nunca destrói um conjunto de
+            // dados que já temos em memória/cache. Isso protege contra RLS,
+            // sessão ainda inicializando, falha transitória ou consulta vazia.
+            const atual=({artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras})[nome];
+            if(data.length===0 && Array.isArray(atual) && atual.length>0) continue;
 
-        // Renderização imediata: os contadores sociais chegam em segundo plano.
+            if(nome==='artistas') artistas=data;
+            else if(nome==='musicas') musicas=data;
+            else if(nome==='musicaArtistas') musicaArtistas=data;
+            else if(nome==='projetos') projetos=data;
+            else if(nome==='projetoMusicas') projetoMusicas=data;
+            else if(nome==='barras') barras=data;
+            else if(nome==='comentariosBarras') comentariosBarras=data;
+            alterou=true;
+        }
+
+        if(alterou || temConteudoPublico()) break;
+        if(tentativa<2) await new Promise(r=>setTimeout(r,[600,1400][tentativa]||1400));
+    }
+
+    salvarCachePublico();
+
+    renderizarArtistas();
+    renderizarMusicas();
+    renderizarProjetosUnderFy();
+    renderizarBarras();
+    renderizarParaVoce();
+    carregarStories();
+    icones();
+
+    carregarContadoresSociais().then(()=>{
         renderizarArtistas();
         renderizarMusicas();
-        renderizarProjetosUnderFy();
         renderizarBarras();
         renderizarParaVoce();
-        carregarStories();
-        icones();
-        carregarContadoresSociais().then(()=>{
-            renderizarArtistas();
-            renderizarMusicas();
-            renderizarBarras();
-            renderizarParaVoce();
-            if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
-            if(document.getElementById('listenerOverlay')?.classList.contains('open')) abrirPerfilOuvinte();
-        });
-    }catch(err){
-        console.error('Erro geral ao carregar UnderFy:',err);
-    }
+        if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
+        if(document.getElementById('listenerOverlay')?.classList.contains('open')) abrirPerfilOuvinte();
+    });
 }
 
 function renderizarProjetosUnderFy(){
@@ -3964,7 +4018,7 @@ RENDER MÚSICAS
 function renderizarMusicas(){
     let el=document.getElementById('tracks');
     if(!el) return;
-    if(!musicas.length){ el.innerHTML=`<div class="empty">Nenhuma música encontrada.</div>`; return; }
+    if(!musicas.length){ el.innerHTML=`<div class="empty">${PUBLIC_STATE.musicas==='error'?'Não foi possível carregar as Guias agora. Tente atualizar novamente.':'Nenhuma música encontrada.'}</div>`; return; }
     el.innerHTML=musicas.map((m,i)=>{
         const liked=getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id));
         const likesCount=contadoresSociais.musicasCurtidas[String(m.id)]||0;
