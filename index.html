@@ -3180,9 +3180,10 @@ function curtirMusica(m){
 
     setStorage(STORAGE.curtidas,lista);
 
-    // V5.9 — contador da Guia muda imediatamente, sem esperar o banco.
+    // V5.10 — contador da Guia muda imediatamente, sem esperar o banco.
     const k=String(m.id);
     contadoresSociais.musicasCurtidas[k]=Math.max(0,(contadoresSociais.musicasCurtidas[k]||0)+(existe?-1:1));
+    salvarContadoresSociais();
 
     // Mantém a curtida sincronizada na conta do ouvinte.
     if(db&&usuarioAtual){
@@ -3962,8 +3963,31 @@ const SOCIAL_STORAGE={
     follows:'underfy_follows',
     barraLikes:'underfy_barra_likes',
     barraReposts:'underfy_barra_reposts',
-    barraComments:'underfy_barra_comments'
+    barraComments:'underfy_barra_comments',
+    counters:'underfy_social_counters_v1'
 };
+
+// Persistência local dos contadores: os números não voltam para zero
+// enquanto o banco ainda está carregando ou caso a conexão falhe.
+function salvarContadoresSociais(){
+    try{ localStorage.setItem(SOCIAL_STORAGE.counters,JSON.stringify(contadoresSociais)); }catch(e){}
+}
+function carregarContadoresSociaisCache(){
+    try{
+        const c=JSON.parse(localStorage.getItem(SOCIAL_STORAGE.counters)||'null');
+        if(c && typeof c==='object'){
+            contadoresSociais={
+                artistas:c.artistas||{},
+                musicasCurtidas:c.musicasCurtidas||{},
+                barrasCurtidas:c.barrasCurtidas||{},
+                barrasReposts:c.barrasReposts||{},
+                barrasComentarios:c.barrasComentarios||{}
+            };
+        }
+    }catch(e){}
+}
+
+carregarContadoresSociaisCache();
 
 function getSocial(nome){ return getStorage(SOCIAL_STORAGE[nome]); }
 function setSocial(nome,dados){ setStorage(SOCIAL_STORAGE[nome],dados); }
@@ -4099,6 +4123,7 @@ function toggleSeguirArtista(id){
 
     const k=String(id);
     contadoresSociais.artistas[k]=Math.max(0,(contadoresSociais.artistas[k]||0)+(seguindoAgora?1:-1));
+    salvarContadoresSociais();
 
     // Atualização imediata: o número de seguidores muda no mesmo toque, sem esperar a rede.
     atualizarContadoresSeguidoresVisiveis(k);
@@ -4143,11 +4168,14 @@ function renderBarra(b){
     return `<article class="barra" data-barra-id="${esc(key)}"><div class="bhead" onclick="abrirPerfilArtista('${esc(aid||'')}')"><img src="${esc(a?.foto_url||PH)}" onerror="this.src='${PH}'"><div class="bauthor"><b>${esc(a?.nome||b.artista_nome||'Artista UnderFy')} <span class="badge">✓</span></b><small data-followers-artist="${esc(aid||'')}">${formatarNumero(contadoresSociais.artistas[String(aid)]||0)} seguidores</small></div></div><div class="btext">${esc(b.texto||b.conteudo||b.letra||'Barra')}</div>${(b.audio_url||b.audio||b.url_audio)?`<audio class="audio" controls src="${esc(b.audio_url||b.audio||b.url_audio)}"></audio>`:''}<div class="pub-stats"><span class="bar-stat-action ${likes?'active':''}" onclick="event.stopPropagation();toggleBarraLike('${esc(key)}')" title="${likes?'Descurtir':'Curtir'}"><i data-lucide="heart"></i> ${formatarNumero(likesCount)}</span><span class="bar-stat-action ${reps?'active':''}" onclick="event.stopPropagation();toggleBarraRepost('${esc(key)}')" title="${reps?'Remover repost':'Repostar'}"><i data-lucide="repeat-2"></i> ${formatarNumero(repsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();toggleBarraComments('${esc(key)}')" title="Ver/comentar"><i data-lucide="message-circle"></i> ${formatarNumero(commentsCount)}</span><span class="bar-stat-action" onclick="event.stopPropagation();compartilharBarra(${JSON.stringify(b).replace(/"/g,'&quot;')})" title="Compartilhar"><i data-lucide="share-2"></i></span></div><div id="comments-${esc(key)}" class="bar-comments"><div>${comments.map(c=>`<div class="comment-item"><b>${esc(c.nome||c.ouvinte_nome||'Ouvinte')}</b> ${esc(c.texto||'')}</div>`).join('')}</div><textarea id="commentText-${esc(key)}" placeholder="Comente nesta Barra..."></textarea><button class="follow-btn" style="margin-top:7px" onclick="enviarComentarioBarra('${esc(key)}')">Comentar</button></div></article>`;
 }
 
-function toggleBarraLike(id){let a=getSocial('barraLikes');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraLikes',a);const k=String(id);contadoresSociais.barrasCurtidas[k]=Math.max(0,(contadoresSociais.barrasCurtidas[k]||0)+(i<0?1:-1));if(db&&usuarioAtual)sincronizarSocialDb('barras_curtidas',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
-function toggleBarraRepost(id){let a=getSocial('barraReposts');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraReposts',a);const k=String(id);contadoresSociais.barrasReposts[k]=Math.max(0,(contadoresSociais.barrasReposts[k]||0)+(i<0?1:-1));if(db&&usuarioAtual)sincronizarSocialDb('barras_reposts',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
+function toggleBarraLike(id){let a=getSocial('barraLikes');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraLikes',a);const k=String(id);contadoresSociais.barrasCurtidas[k]=Math.max(0,(contadoresSociais.barrasCurtidas[k]||0)+(i<0?1:-1));
+    salvarContadoresSociais();if(db&&usuarioAtual)sincronizarSocialDb('barras_curtidas',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
+function toggleBarraRepost(id){let a=getSocial('barraReposts');const i=a.findIndex(x=>String(x)===String(id));if(i>=0)a.splice(i,1);else a.push(id);setSocial('barraReposts',a);const k=String(id);contadoresSociais.barrasReposts[k]=Math.max(0,(contadoresSociais.barrasReposts[k]||0)+(i<0?1:-1));
+    salvarContadoresSociais();if(db&&usuarioAtual)sincronizarSocialDb('barras_reposts',{barra_id:id,ouvinte_id:usuarioAtual.id},i<0);renderizarBarras();}
 async function sincronizarSocialDb(tabela,registro,adicionar){try{if(adicionar)await db.from(tabela).upsert(registro,{onConflict:'ouvinte_id,barra_id'});else await db.from(tabela).delete().eq('ouvinte_id',registro.ouvinte_id).eq('barra_id',registro.barra_id);}catch(e){}}
 function toggleBarraComments(id){document.getElementById('comments-'+id)?.classList.toggle('open');}
-function enviarComentarioBarra(id){const ta=document.getElementById('commentText-'+id);const texto=ta?.value.trim();if(!texto)return;const a=getSocial('barraComments');a.push({barra_id:id,texto,nome:perfilOuvinte?.nome||'Ouvinte'});setSocial('barraComments',a);const k=String(id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;if(db&&usuarioAtual){(async()=>{try{await db.from('barras_comentarios').insert({barra_id:id,ouvinte_id:usuarioAtual.id,texto});}catch(e){}})();}renderizarBarras();toggleBarraComments(id);}
+function enviarComentarioBarra(id){const ta=document.getElementById('commentText-'+id);const texto=ta?.value.trim();if(!texto)return;const a=getSocial('barraComments');a.push({barra_id:id,texto,nome:perfilOuvinte?.nome||'Ouvinte'});setSocial('barraComments',a);const k=String(id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;
+    salvarContadoresSociais();if(db&&usuarioAtual){(async()=>{try{await db.from('barras_comentarios').insert({barra_id:id,ouvinte_id:usuarioAtual.id,texto});}catch(e){}})();}renderizarBarras();toggleBarraComments(id);}
 
 function formatarNumero(n){
     n=Number(n)||0;
@@ -4157,8 +4185,8 @@ function formatarNumero(n){
 }
 
 async function carregarContadoresSociais(){
+    carregarContadoresSociaisCache();
     if(!db) return;
-    contadoresSociais={artistas:{},musicasCurtidas:{},barrasCurtidas:{},barrasReposts:{},barrasComentarios:{}};
     try{
         const [f,l,bl,br,bc]=await Promise.all([
             db.from('artistas_seguidos').select('artista_id'),
@@ -4171,7 +4199,8 @@ async function carregarContadoresSociais(){
         (l.data||[]).forEach(x=>{const k=String(x.musica_id);contadoresSociais.musicasCurtidas[k]=(contadoresSociais.musicasCurtidas[k]||0)+1;});
         (bl.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasCurtidas[k]=(contadoresSociais.barrasCurtidas[k]||0)+1;});
         (br.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasReposts[k]=(contadoresSociais.barrasReposts[k]||0)+1;});
-        (bc.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;});
+        (bc.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;
+    salvarContadoresSociais();});
     }catch(e){}
 }
 
