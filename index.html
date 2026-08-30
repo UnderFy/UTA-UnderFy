@@ -2827,8 +2827,24 @@ function icones(){
 INIT
 ========================================= */
 
+function carregarCachePublico(){
+    try{
+        const c=JSON.parse(localStorage.getItem('underfy_public_cache_v1')||'null');
+        if(!c || typeof c!=='object') return;
+        if(Array.isArray(c.artistas)) artistas=c.artistas;
+        if(Array.isArray(c.musicas)) musicas=c.musicas;
+        if(Array.isArray(c.musicaArtistas)) musicaArtistas=c.musicaArtistas;
+        if(Array.isArray(c.projetos)) projetos=c.projetos;
+        if(Array.isArray(c.projetoMusicas)) projetoMusicas=c.projetoMusicas;
+        if(Array.isArray(c.barras)) barras=c.barras;
+        if(Array.isArray(c.comentariosBarras)) comentariosBarras=c.comentariosBarras;
+    }catch(e){}
+}
+
 function init(){
 
+    carregarCachePublico();
+    carregarContadoresSociaisCache();
     icones();
 
     // Conecta o Supabase ANTES da autenticação.
@@ -3180,7 +3196,7 @@ function curtirMusica(m){
 
     setStorage(STORAGE.curtidas,lista);
 
-    // V5.10 — contador da Guia muda imediatamente, sem esperar o banco.
+    // V5.11 — contador da Guia muda imediatamente, sem esperar o banco.
     const k=String(m.id);
     contadoresSociais.musicasCurtidas[k]=Math.max(0,(contadoresSociais.musicasCurtidas[k]||0)+(existe?-1:1));
     salvarContadoresSociais();
@@ -3867,13 +3883,23 @@ async function carregarDadosUnderFy(){
         if(pm.error) console.error('Erro projeto_musicas:',pm.error);
         if(b.error) console.error('Erro Barras:',b.error);
 
-        artistas=a.data||[];
-        musicas=m.data||[];
-        musicaArtistas=r.data||[];
-        projetos=p.data||[];
-        projetoMusicas=pm.data||[];
-        barras=b.data||[];
-        comentariosBarras=bc?.data||[];
+        // IMPORTANTE: nunca substituir dados existentes por [] quando uma consulta falhar.
+        // Um erro de rede/RLS deve preservar o conteúdo já carregado/cacheado.
+        if(!a.error && Array.isArray(a.data)) artistas=a.data;
+        if(!m.error && Array.isArray(m.data)) musicas=m.data;
+        if(!r.error && Array.isArray(r.data)) musicaArtistas=r.data;
+        if(!p.error && Array.isArray(p.data)) projetos=p.data;
+        if(!pm.error && Array.isArray(pm.data)) projetoMusicas=pm.data;
+        if(!b.error && Array.isArray(b.data)) barras=b.data;
+        if(bc && !bc.error && Array.isArray(bc.data)) comentariosBarras=bc.data;
+
+        // Cache local dos dados públicos: se a rede falhar em uma atualização futura,
+        // o último conteúdo válido continua disponível no dispositivo.
+        try{
+            localStorage.setItem('underfy_public_cache_v1',JSON.stringify({
+                artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras
+            }));
+        }catch(e){}
 
         // Renderização imediata: os contadores sociais chegam em segundo plano.
         renderizarArtistas();
@@ -4185,7 +4211,6 @@ function formatarNumero(n){
 }
 
 async function carregarContadoresSociais(){
-    carregarContadoresSociaisCache();
     if(!db) return;
     try{
         const [f,l,bl,br,bc]=await Promise.all([
@@ -4195,13 +4220,33 @@ async function carregarContadoresSociais(){
             db.from('barras_reposts').select('barra_id'),
             db.from('barras_comentarios').select('barra_id')
         ]);
-        (f.data||[]).forEach(x=>{const k=String(x.artista_id);contadoresSociais.artistas[k]=(contadoresSociais.artistas[k]||0)+1;});
-        (l.data||[]).forEach(x=>{const k=String(x.musica_id);contadoresSociais.musicasCurtidas[k]=(contadoresSociais.musicasCurtidas[k]||0)+1;});
-        (bl.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasCurtidas[k]=(contadoresSociais.barrasCurtidas[k]||0)+1;});
-        (br.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasReposts[k]=(contadoresSociais.barrasReposts[k]||0)+1;});
-        (bc.data||[]).forEach(x=>{const k=String(x.barra_id);contadoresSociais.barrasComentarios[k]=(contadoresSociais.barrasComentarios[k]||0)+1;
-    salvarContadoresSociais();});
-    }catch(e){}
+
+        // Só substitui cada contador quando a consulta correspondente funcionou.
+        // Isso evita apagar os números locais por causa de erro de RLS/rede.
+        if(!f.error){
+            const x={}; (f.data||[]).forEach(r=>{const k=String(r.artista_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.artistas=x;
+        }
+        if(!l.error){
+            const x={}; (l.data||[]).forEach(r=>{const k=String(r.musica_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.musicasCurtidas=x;
+        }
+        if(!bl.error){
+            const x={}; (bl.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.barrasCurtidas=x;
+        }
+        if(!br.error){
+            const x={}; (br.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.barrasReposts=x;
+        }
+        if(!bc.error){
+            const x={}; (bc.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
+            contadoresSociais.barrasComentarios=x;
+        }
+        salvarContadoresSociais();
+    }catch(e){
+        // Mantém o último cache válido em caso de falha.
+    }
 }
 
 function abrirPerfilOuvinte(){
