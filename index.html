@@ -2826,7 +2826,8 @@ let projetos=[];
 let projetoMusicas=[];
 let comentariosBarras=[];
 let contadoresSociais={artistas:{},musicasCurtidas:{},musicasStreams:{},barrasCurtidas:{},barrasReposts:{},barrasComentarios:{}};
-let streamSessaoAtual={musicaId:null,acumulado:0,ultimoTempo:null,contado:false};
+let streamSessaoAtual={musicaId:null,musica:null,acumulado:0,ultimoTempo:null,contado:false,contagemAtiva:false};
+let streamTimer=null;
 let streamSessaoId=null;
 
 let indiceAtual=-1;
@@ -4431,9 +4432,7 @@ async function registrarStreamMusica(musica){
         // O stream é público para registro; não depende de login.
         const r=await dbPublic
             .from('musicas_streams')
-            .insert(registro)
-            .select('id')
-            .maybeSingle();
+            .insert(registro);
 
         if(r.error){
             console.error('Erro ao registrar stream:',r.error,registro);
@@ -4456,27 +4455,51 @@ async function registrarStreamMusica(musica){
 function iniciarContagemStream(musica){
     const id=String(musica?.id||'');
     if(!id) return;
-    streamSessaoAtual={musicaId:id,acumulado:0,ultimoTempo:null,contado:false};
+    if(streamTimer){clearInterval(streamTimer);streamTimer=null;}
+    streamSessaoAtual={musicaId:id,musica:musica,acumulado:0,ultimoTempo:null,contado:false,contagemAtiva:false};
 }
 
 function processarTempoStream(audio){
-    const id=String(musicas[indiceAtual]?.id||'');
+    const musica=streamSessaoAtual.musica;
+    const id=String(musica?.id||'');
     if(!id || audio.paused || audio.seeking || streamSessaoAtual.musicaId!==id || streamSessaoAtual.contado) return;
+
     const atual=Number(audio.currentTime)||0;
-    if(streamSessaoAtual.ultimoTempo===null){streamSessaoAtual.ultimoTempo=atual;return;}
+    if(streamSessaoAtual.ultimoTempo===null){
+        streamSessaoAtual.ultimoTempo=atual;
+        return;
+    }
+
     const delta=atual-streamSessaoAtual.ultimoTempo;
     streamSessaoAtual.ultimoTempo=atual;
-    if(delta<=0) return;
 
-    // Pequenos atrasos entre eventos de timeupdate não devem zerar a contagem.
-    // Saltos grandes normalmente indicam seeking, troca de faixa ou suspensão.
-    if(delta>5) return;
+    // Ignora retrocessos e saltos anormais (seek/troca de mídia).
+    if(delta<=0 || delta>5) return;
 
     streamSessaoAtual.acumulado+=delta;
+
     if(streamSessaoAtual.acumulado>=30){
         streamSessaoAtual.contado=true;
-        registrarStreamMusica(musicas[indiceAtual]);
+        streamSessaoAtual.contagemAtiva=false;
+        if(streamTimer){clearInterval(streamTimer);streamTimer=null;}
+        registrarStreamMusica(musica);
     }
+}
+
+function iniciarTimerStream(){
+    const audio=document.getElementById('audio');
+    if(!audio || streamTimer || streamSessaoAtual.contado) return;
+    streamSessaoAtual.contagemAtiva=true;
+    streamSessaoAtual.ultimoTempo=Number(audio.currentTime)||0;
+    streamTimer=setInterval(()=>{
+        if(!audio.paused && !audio.seeking) processarTempoStream(audio);
+        else if(audio.paused) streamSessaoAtual.ultimoTempo=Number(audio.currentTime)||streamSessaoAtual.ultimoTempo;
+    },250);
+}
+
+function pararTimerStream(){
+    if(streamTimer){clearInterval(streamTimer);streamTimer=null;}
+    streamSessaoAtual.contagemAtiva=false;
 }
 
 async function carregarContadoresSociais(){
@@ -4988,7 +5011,28 @@ document
 
 document
 .getElementById('audio')
-.addEventListener('seeking',function(){streamSessaoAtual.ultimoTempo=null;});
+.addEventListener('playing',function(){
+    iniciarTimerStream();
+});
+
+document
+.getElementById('audio')
+.addEventListener('pause',function(){
+    if(!streamSessaoAtual.contado) streamSessaoAtual.ultimoTempo=Number(this.currentTime)||streamSessaoAtual.ultimoTempo;
+    pararTimerStream();
+});
+
+document
+.getElementById('audio')
+.addEventListener('seeking',function(){
+    streamSessaoAtual.ultimoTempo=Number(this.currentTime)||0;
+});
+
+document
+.getElementById('audio')
+.addEventListener('ended',function(){
+    pararTimerStream();
+});
 
 document
 .getElementById('progressBar')
