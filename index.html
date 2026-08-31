@@ -3949,16 +3949,43 @@ function encontrarArtista(id){
 }
 
 async function carregarDadosUnderFy(){
-    if(!dbPublic) return;
+    if(!dbPublic && !db) return;
+
+    // Cada consulta pública possui uma segunda tentativa sem `order()`. Isso
+    // evita que uma coluna de ordenação ausente impeça a tela inteira de carregar.
+    const clientePublico=()=>dbPublic||db;
+    const consultaFlexivel=async(tabela, ordenar=null, limite=null)=>{
+        const clientes=[dbPublic,db].filter(Boolean);
+        let ultimoErro=null;
+        for(const cliente of clientes){
+            try{
+                let q=cliente.from(tabela).select('*');
+                if(ordenar){
+                    const ordenada=await q.order(ordenar,{ascending:false});
+                    if(!ordenada.error){
+                        return limite ? {...ordenada,data:(ordenada.data||[]).slice(0,limite)} : ordenada;
+                    }
+                    ultimoErro=ordenada.error;
+                }
+                q=cliente.from(tabela).select('*');
+                const simples=await q;
+                if(!simples.error){
+                    return limite ? {...simples,data:(simples.data||[]).slice(0,limite)} : simples;
+                }
+                ultimoErro=simples.error;
+            }catch(e){ ultimoErro=e; }
+        }
+        return {data:null,error:ultimoErro};
+    };
 
     const consultas=[
-        ['artistas',()=>dbPublic.from('artistas').select('*').order('nome',{ascending:true})],
-        ['musicas',()=>dbPublic.from('musicas_ouvintes').select('*').order('created_at',{ascending:false}).limit(100)],
-        ['musicaArtistas',()=>dbPublic.from('musica_artistas').select('*')],
-        ['projetos',()=>dbPublic.from('projetos').select('*').order('created_at',{ascending:false})],
-        ['projetoMusicas',()=>dbPublic.from('projeto_musicas').select('*')],
-        ['barras',()=>dbPublic.from('barras').select('*').order('created_at',{ascending:false}).limit(50)],
-        ['comentariosBarras',()=>dbPublic.from('barras_comentarios').select('*').order('created_at',{ascending:false}).limit(500)]
+        ['artistas',()=>consultaFlexivel('artistas','nome')],
+        ['musicas',()=>consultaFlexivel('musicas_ouvintes','created_at',100)],
+        ['musicaArtistas',()=>consultaFlexivel('musica_artistas')],
+        ['projetos',()=>consultaFlexivel('projetos','created_at')],
+        ['projetoMusicas',()=>consultaFlexivel('projeto_musicas')],
+        ['barras',()=>consultaFlexivel('barras','created_at',50)],
+        ['comentariosBarras',()=>consultaFlexivel('barras_comentarios','created_at',500)]
     ];
 
     for(let tentativa=0;tentativa<3;tentativa++){
@@ -3981,9 +4008,6 @@ async function carregarDadosUnderFy(){
             PUBLIC_STATE[nome]='ok';
             if(!Array.isArray(data)) continue;
 
-            // REGRA CRÍTICA: uma resposta vazia nunca destrói um conjunto de
-            // dados que já temos em memória/cache. Isso protege contra RLS,
-            // sessão ainda inicializando, falha transitória ou consulta vazia.
             const atual=({artistas,musicas,musicaArtistas,projetos,projetoMusicas,barras,comentariosBarras})[nome];
             if(data.length===0 && Array.isArray(atual) && atual.length>0) continue;
 
@@ -4002,13 +4026,12 @@ async function carregarDadosUnderFy(){
     }
 
     salvarCachePublico();
-
     renderizarArtistas();
     renderizarMusicas();
     renderizarProjetosUnderFy();
     renderizarBarras();
     renderizarParaVoce();
-    carregarStories();
+    await carregarStories();
     icones();
 
     carregarContadoresSociais().then(()=>{
@@ -4175,28 +4198,45 @@ function renderizarParaVoce(){
 async function carregarStories(){
     const el=document.getElementById('stories');
     if(!el) return;
-    if(!dbPublic){
+    if(!dbPublic && !db){
         el.innerHTML='<div class="empty" style="width:100%">Conectando aos Stories...</div>';
         return;
     }
 
     let dados=null, ultimoErro=null;
-    const consultas=[
-        ()=>dbPublic.from('stories').select('*').order('created_at',{ascending:false}).limit(100),
-        ()=>dbPublic.from('stories').select('*').limit(100)
-    ];
-    for(const consulta of consultas){
-        try{
-            const r=await consulta();
-            if(!r.error){dados=r.data||[];break;}
-            ultimoErro=r.error;
-        }catch(e){ultimoErro=e;}
+    // Primeiro tenta o cliente público; se o RLS exigir sessão, tenta o cliente
+    // autenticado. Também tenta sem order() caso created_at não exista na tabela.
+    for(const cliente of [dbPublic,db].filter(Boolean)){
+        const tentativas=[
+            async()=>cliente.from('stories').select('*').order('created_at',{ascending:false}).limit(100),
+            async()=>cliente.from('stories').select('*').limit(100),
+            async()=>cliente.from('stories').select('*')
+        ];
+        for(const consulta of tentativas){
+            try{
+                const r=await consulta();
+                if(!r.error){dados=r.data||[];break;}
+                ultimoErro=r.error;
+            }catch(e){ultimoErro=e;}
+        }
+        if(dados!==null) break;
     }
+
+    if(dados===null){
+        // Não apaga um conjunto local já válido quando o banco estiver temporariamente indisponível.
+        try{
+            const cache=JSON.parse(localStorage.getItem('underfy_stories_cache_v1')||'[]');
+            if(Array.isArray(cache) && cache.length) dados=cache;
+        }catch(e){}
+    }
+
     if(dados===null){
         console.warn('UnderFy: não foi possível carregar Stories.',ultimoErro);
         el.innerHTML='<div class="empty" style="width:100%">Os Stories estão indisponíveis no momento.</div>';
         return;
     }
+
+    try{ localStorage.setItem('underfy_stories_cache_v1',JSON.stringify(dados)); }catch(e){}
 
     const agora=Date.now();
     stories=dados.filter(st=>{
@@ -4234,6 +4274,7 @@ async function carregarStories(){
     }).join(''):'<div class="empty" style="width:100%">Nenhum Story publicado nas últimas 24 horas.</div>';
     icones();
 }
+
 function encontrarArtistaObj(id){ return artistas.find(a=>String(a.id)===String(id)); }
 function storiesDoArtista(id){ return stories.filter(s=>String(s.artist_id??s.artista_id??s.usuario_artista_id)===String(id)); }
 function todosStoriesSeguidos(){
@@ -5593,7 +5634,7 @@ function atualizarPerfilHeader(){
 START
 ========================================= */
 
-init();
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
 
 </script>
 
