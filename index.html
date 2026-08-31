@@ -676,15 +676,19 @@ RECOMMEND
 .projects-row{display:flex;gap:13px;overflow-x:auto;scrollbar-width:none;padding:3px 1px 6px}.projects-row::-webkit-scrollbar{display:none}
 .project-card{min-width:190px;width:190px;background:var(--s);border:1px solid var(--line);border-radius:18px;padding:10px;cursor:pointer;position:relative}.project-card img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:13px;background:#191919}.project-card b{display:block;margin-top:9px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.project-card small{display:block;margin-top:4px;color:#777;font-size:10px}.project-share{position:absolute;right:18px;top:18px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;cursor:pointer;z-index:2}.project-share:hover{background:var(--green);color:#050505}.recommend-grid{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:3px 1px 6px}.recommend-grid::-webkit-scrollbar{display:none}.recommend{min-width:165px;width:165px;flex:0 0 165px}.track-share{width:34px;height:34px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer;flex-shrink:0}.track-share:hover{background:var(--green);color:#050505}.artist-share{margin-top:7px;width:32px;height:32px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer}.artist-share:hover{background:var(--green);color:#050505}.profile-project-share{width:32px;height:32px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer;position:absolute;right:14px;top:14px}.profile-project-share:hover{background:var(--green);color:#050505}
 .recommend-grid{
-    display:grid;
-
-    grid-template-columns:
-        repeat(auto-fill,minmax(150px,1fr));
-
+    display:flex;
     gap:12px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding-bottom:4px;
+    scroll-snap-type:x proximity;
 }
 
 .recommend{
+    min-width:165px;
+    width:165px;
+    flex:0 0 165px;
+    scroll-snap-align:start;
     background:var(--s);
 
     border:1px solid var(--line);
@@ -1754,10 +1758,7 @@ DESKTOP
         margin:auto;
     }
 
-    .recommend-grid{
-        grid-template-columns:
-            repeat(5,1fr);
-    }
+    .recommend-grid{display:flex;}
 
 }
 
@@ -1786,10 +1787,7 @@ MOBILE
         align-items:flex-start;
     }
 
-    .recommend-grid{
-        grid-template-columns:
-            repeat(2,1fr);
-    }
+    .recommend-grid{display:flex;}
 
     .main-controls{
         gap:8px;
@@ -4440,19 +4438,24 @@ function obterSessaoStream(){
 
 async function registrarStreamMusica(musica){
     if(!musica?.id || !dbPublic) return;
-    const registro={musica_id:String(musica.id),criado_em:new Date().toISOString(),sessao_id:obterSessaoStream(),ouvinte_id:usuarioAtual?.id||null};
+    const k=String(musica.id);
     const cliente=usuarioAtual&&db?db:dbPublic;
     try{
-        const r=await cliente.from('musicas_streams').insert(registro).select('id').maybeSingle();
+        // O stream de 30 segundos passa a ser contabilizado diretamente em musicas.plays.
+        // O valor local é atualizado primeiro para refletir imediatamente na interface.
+        const playsAtual=Number(musica.plays||0);
+        const novoPlays=playsAtual+1;
+        const r=await cliente.from('musicas').update({plays:novoPlays}).eq('id',musica.id).select('id,plays').maybeSingle();
         if(r.error) throw r.error;
-        const k=String(musica.id);
-        contadoresSociais.musicasStreams[k]=(contadoresSociais.musicasStreams[k]||0)+1;
+        if(r.data?.plays!=null) musica.plays=Number(r.data.plays);
+        else musica.plays=novoPlays;
+        contadoresSociais.musicasStreams[k]=Number(musica.plays||novoPlays);
         salvarContadoresSociais();
         registrarInteracaoPersistente('stream',{musica_id:musica.id,segundos:30});
         renderizarMusicas(); renderizarParaVoce();
         if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
     }catch(e){
-        console.warn('Não foi possível registrar o stream. Crie/libere a tabela musicas_streams no Supabase.',e);
+        console.warn('Não foi possível incrementar plays da música no Supabase.',e);
     }
 }
 
@@ -4483,7 +4486,7 @@ async function carregarContadoresSociais(){
         const [f,l,ms,bl,br,bc]=await Promise.all([
             dbPublic.from('artistas_seguidos').select('artista_id'),
             dbPublic.from('musicas_curtidas').select('musica_id'),
-            dbPublic.from('musicas_streams').select('musica_id'),
+            dbPublic.from('musicas').select('id,plays'),
             dbPublic.from('barras_curtidas').select('barra_id'),
             dbPublic.from('barras_reposts').select('barra_id'),
             dbPublic.from('barras_comentarios').select('barra_id')
@@ -4500,7 +4503,7 @@ async function carregarContadoresSociais(){
             contadoresSociais.musicasCurtidas=x;
         }
         if(!ms.error){
-            const x={}; (ms.data||[]).forEach(r=>{const k=String(r.musica_id);x[k]=(x[k]||0)+1;});
+            const x={}; (ms.data||[]).forEach(r=>{const k=String(r.id);x[k]=Number(r.plays||0);});
             contadoresSociais.musicasStreams=x;
         }
         if(!bl.error){
@@ -5515,7 +5518,9 @@ async function entrarConta(){
             nome:usuarioAtual.user_metadata?.nome||email.split('@')[0]||'Ouvinte',
             avatar_url:usuarioAtual.user_metadata?.avatar_url||''
         };
-        abrirPerfil();
+        // Fecha imediatamente a aba/modal de login após autenticação bem-sucedida.
+        // O carregamento do perfil e da biblioteca continua em segundo plano.
+        fecharOverlay('authOverlay');
 
         Promise.allSettled([
             carregarPerfilOuvinte(),
