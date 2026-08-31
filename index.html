@@ -3951,7 +3951,7 @@ async function carregarDadosUnderFy(){
 
     const consultas=[
         ['artistas',()=>dbPublic.from('artistas').select('*').order('nome',{ascending:true})],
-        ['musicas',()=>dbPublic.from('musicas').select('*').order('created_at',{ascending:false}).limit(100)],
+        ['musicas',()=>dbPublic.from('musicas_ouvintes').select('*').order('created_at',{ascending:false}).limit(100)],
         ['musicaArtistas',()=>dbPublic.from('musica_artistas').select('*')],
         ['projetos',()=>dbPublic.from('projetos').select('*').order('created_at',{ascending:false})],
         ['projetoMusicas',()=>dbPublic.from('projeto_musicas').select('*')],
@@ -4068,7 +4068,7 @@ CARREGAR MÚSICAS
 
 async function carregarMusicas(){
     if(!dbPublic) return;
-    const r=await dbPublic.from('musicas').select('*').order('created_at',{ascending:false}).limit(100);
+    const r=await dbPublic.from('musicas_ouvintes').select('*').order('created_at',{ascending:false}).limit(100);
     if(r.error){ console.error('Erro ao carregar músicas:',r.error); return; }
     musicas=r.data||[];
     if(!musicaArtistas.length){
@@ -4418,19 +4418,38 @@ function obterSessaoStream(){
 }
 
 async function registrarStreamMusica(musica){
-    if(!musica?.id || !dbPublic) return;
-    const registro={musica_id:String(musica.id),criado_em:new Date().toISOString(),sessao_id:obterSessaoStream(),ouvinte_id:usuarioAtual?.id||null};
-    const cliente=usuarioAtual&&db?db:dbPublic;
+    if(!musica?.id || !dbPublic) return false;
+
+    const registro={
+        musica_id:String(musica.id),
+        criado_em:new Date().toISOString(),
+        sessao_id:obterSessaoStream(),
+        ouvinte_id:usuarioAtual?.id||null
+    };
+
     try{
-        const r=await cliente.from('musicas_streams').insert(registro).select('id').maybeSingle();
-        if(r.error) throw r.error;
+        // O stream é público para registro; não depende de login.
+        const r=await dbPublic
+            .from('musicas_streams')
+            .insert(registro)
+            .select('id')
+            .maybeSingle();
+
+        if(r.error){
+            console.error('Erro ao registrar stream:',r.error,registro);
+            return false;
+        }
+
         const k=String(musica.id);
         contadoresSociais.musicasStreams[k]=(contadoresSociais.musicasStreams[k]||0)+1;
         salvarContadoresSociais();
-        renderizarMusicas(); renderizarParaVoce();
+        renderizarMusicas();
+        renderizarParaVoce();
         if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
+        return true;
     }catch(e){
-        console.warn('Não foi possível registrar o stream. Crie/libere a tabela musicas_streams no Supabase.',e);
+        console.error('Falha inesperada ao registrar stream:',e,registro);
+        return false;
     }
 }
 
@@ -4447,7 +4466,12 @@ function processarTempoStream(audio){
     if(streamSessaoAtual.ultimoTempo===null){streamSessaoAtual.ultimoTempo=atual;return;}
     const delta=atual-streamSessaoAtual.ultimoTempo;
     streamSessaoAtual.ultimoTempo=atual;
-    if(delta<=0 || delta>2.5) return;
+    if(delta<=0) return;
+
+    // Pequenos atrasos entre eventos de timeupdate não devem zerar a contagem.
+    // Saltos grandes normalmente indicam seeking, troca de faixa ou suspensão.
+    if(delta>5) return;
+
     streamSessaoAtual.acumulado+=delta;
     if(streamSessaoAtual.acumulado>=30){
         streamSessaoAtual.contado=true;
