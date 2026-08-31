@@ -676,19 +676,15 @@ RECOMMEND
 .projects-row{display:flex;gap:13px;overflow-x:auto;scrollbar-width:none;padding:3px 1px 6px}.projects-row::-webkit-scrollbar{display:none}
 .project-card{min-width:190px;width:190px;background:var(--s);border:1px solid var(--line);border-radius:18px;padding:10px;cursor:pointer;position:relative}.project-card img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:13px;background:#191919}.project-card b{display:block;margin-top:9px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.project-card small{display:block;margin-top:4px;color:#777;font-size:10px}.project-share{position:absolute;right:18px;top:18px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;cursor:pointer;z-index:2}.project-share:hover{background:var(--green);color:#050505}.recommend-grid{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:3px 1px 6px}.recommend-grid::-webkit-scrollbar{display:none}.recommend{min-width:165px;width:165px;flex:0 0 165px}.track-share{width:34px;height:34px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer;flex-shrink:0}.track-share:hover{background:var(--green);color:#050505}.artist-share{margin-top:7px;width:32px;height:32px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer}.artist-share:hover{background:var(--green);color:#050505}.profile-project-share{width:32px;height:32px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer;position:absolute;right:14px;top:14px}.profile-project-share:hover{background:var(--green);color:#050505}
 .recommend-grid{
-    display:flex;
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fill,minmax(150px,1fr));
+
     gap:12px;
-    overflow-x:auto;
-    scrollbar-width:none;
-    padding-bottom:4px;
-    scroll-snap-type:x proximity;
 }
 
 .recommend{
-    min-width:165px;
-    width:165px;
-    flex:0 0 165px;
-    scroll-snap-align:start;
     background:var(--s);
 
     border:1px solid var(--line);
@@ -1758,7 +1754,10 @@ DESKTOP
         margin:auto;
     }
 
-    .recommend-grid{display:flex;}
+    .recommend-grid{
+        grid-template-columns:
+            repeat(5,1fr);
+    }
 
 }
 
@@ -1787,7 +1786,10 @@ MOBILE
         align-items:flex-start;
     }
 
-    .recommend-grid{display:flex;}
+    .recommend-grid{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
 
     .main-controls{
         gap:8px;
@@ -3316,6 +3318,12 @@ function curtirMusica(m){
 }
 
 
+function curtirMusicaPorId(id){
+    const m=musicas.find(x=>String(x.id)===String(id));
+    if(!m) return;
+    curtirMusica(m);
+}
+
 /* =========================================
 CURTIR ATUAL
 ========================================= */
@@ -4119,7 +4127,7 @@ function renderizarMusicas(){
             <img class="cover" src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'">
             <div class="tinfo"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>${esc(artistasDaMusica(m))}</span></div>
             <div class="pub-stats guide-samples">
-                <span class="guide-like-sample ${liked?'active':''}" onclick="event.stopPropagation();curtirMusica(m)" title="${liked?'Descurtir':'Curtir'}">
+                <span class="guide-like-sample ${liked?'active':''}" onclick="event.stopPropagation();curtirMusicaPorId('${esc(m.id)}')" title="${liked?'Descurtir':'Curtir'}">
                     <i data-lucide="heart"></i> ${formatarNumero(likesCount)}
                 </span>
                 <span class="guide-streams" title="Streams"><i data-lucide="play"></i> ${formatarNumero(obterStreamsMusica(m))}</span>
@@ -4440,25 +4448,31 @@ async function registrarStreamMusica(musica){
     if(!musica?.id || !dbPublic) return;
     const k=String(musica.id);
     const cliente=usuarioAtual&&db?db:dbPublic;
+
     try{
-        // O stream de 30 segundos passa a ser contabilizado diretamente em musicas.plays.
-        // O valor local é atualizado primeiro para refletir imediatamente na interface.
-        const playsAtual=Number(musica.plays||0);
-        const novoPlays=playsAtual+1;
-        const r=await cliente.from('musicas').update({plays:novoPlays}).eq('id',musica.id).select('id,plays').maybeSingle();
-        if(r.error) throw r.error;
-        if(r.data?.plays!=null) musica.plays=Number(r.data.plays);
-        else musica.plays=novoPlays;
-        contadoresSociais.musicasStreams[k]=Number(musica.plays||novoPlays);
+        // PLAY OFICIAL: depois de 30 segundos, incrementa o campo plays da própria guia.
+        // O registro em musicas_streams é mantido para não remover a estrutura existente.
+        const atualPlays=Number(musica.plays)||0;
+        const novoPlays=atualPlays+1;
+        const up=await cliente.from('musicas').update({plays:novoPlays}).eq('id',musica.id).select('id,plays').maybeSingle();
+        if(up.error) throw up.error;
+
+        musica.plays=Number(up.data?.plays ?? novoPlays);
+
+        // Mantém também o registro individual de stream já existente.
+        const registro={musica_id:k,criado_em:new Date().toISOString(),sessao_id:obterSessaoStream(),ouvinte_id:usuarioAtual?.id||null};
+        const sr=await cliente.from('musicas_streams').insert(registro).select('id').maybeSingle();
+        if(sr.error) console.warn('Play salvo em musicas, mas não foi possível registrar musicas_streams.',sr.error);
+
+        contadoresSociais.musicasStreams[k]=musica.plays;
         salvarContadoresSociais();
         registrarInteracaoPersistente('stream',{musica_id:musica.id,segundos:30});
         renderizarMusicas(); renderizarParaVoce();
         if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
     }catch(e){
-        console.warn('Não foi possível incrementar plays da música no Supabase.',e);
+        console.warn('Não foi possível incrementar o campo plays da música após 30 segundos.',e);
     }
 }
-
 function iniciarContagemStream(musica){
     const id=String(musica?.id||'');
     if(!id) return;
@@ -4486,7 +4500,7 @@ async function carregarContadoresSociais(){
         const [f,l,ms,bl,br,bc]=await Promise.all([
             dbPublic.from('artistas_seguidos').select('artista_id'),
             dbPublic.from('musicas_curtidas').select('musica_id'),
-            dbPublic.from('musicas').select('id,plays'),
+            dbPublic.from('musicas_streams').select('musica_id'),
             dbPublic.from('barras_curtidas').select('barra_id'),
             dbPublic.from('barras_reposts').select('barra_id'),
             dbPublic.from('barras_comentarios').select('barra_id')
@@ -4503,7 +4517,7 @@ async function carregarContadoresSociais(){
             contadoresSociais.musicasCurtidas=x;
         }
         if(!ms.error){
-            const x={}; (ms.data||[]).forEach(r=>{const k=String(r.id);x[k]=Number(r.plays||0);});
+            const x={}; (ms.data||[]).forEach(r=>{const k=String(r.musica_id);x[k]=(x[k]||0)+1;});
             contadoresSociais.musicasStreams=x;
         }
         if(!bl.error){
@@ -4529,7 +4543,7 @@ function abrirPerfilOuvinte(){
     const nome=perfilOuvinte?.nome||usuarioAtual.email?.split('@')[0]||'Ouvinte'; const avatar=perfilOuvinte?.avatar_url||PH;
     const reposts=getSocial('barraReposts').map(String); const comments=getSocial('barraComments');
     const liked=getStorage(STORAGE.curtidas);
-    document.getElementById('listenerProfile').innerHTML=`<div class="profile-cover"></div><div class="profile-body"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><img class="avatar" src="${esc(avatar)}" onerror="this.src='${PH}'"><h2>${esc(nome)}</h2><div class="meta">Ouvinte UnderFy • UTA</div></div><button class="listener-edit-btn" onclick="abrirEditorPerfilOuvinte()"><i data-lucide="pencil"></i> Editar perfil</button></div><div class="social-stats"><div class="social-stat"><b>${liked.length}</b><span>Músicas curtidas</span></div><div class="social-stat"><b>${reposts.length}</b><span>Barras repostadas</span></div><div class="social-stat"><b>${comments.length}</b><span>Comentários</span></div></div><div class="profile-tabs">${[['curtidas','Músicas curtidas'],['reposts','Barras repostadas'],['comentarios','Comentários']].map(([k,t])=>`<button class="profile-tab ${listenerTabAtual===k?'active':''}" onclick="renderizarPerfilOuvinte('${k}')">${t}</button>`).join('')}</div><div id="listenerContent"></div></div>`;
+    document.getElementById('listenerProfile').innerHTML=`<div class="profile-cover"></div><div class="profile-body"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><img class="avatar" src="${esc(avatar)}" onerror="this.src='${PH}'"><h2>${esc(nome)}</h2><div class="meta">Ouvinte UnderFy • UTA</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="listener-edit-btn" onclick="abrirEditorPerfilOuvinte()"><i data-lucide="pencil"></i> Editar perfil</button><button class="listener-edit-btn" style="color:#ff7777;border-color:#4a2525" onclick="sairConta()"><i data-lucide="log-out"></i> Sair da conta</button></div></div><div class="social-stats"><div class="social-stat"><b>${liked.length}</b><span>Músicas curtidas</span></div><div class="social-stat"><b>${reposts.length}</b><span>Barras repostadas</span></div><div class="social-stat"><b>${comments.length}</b><span>Comentários</span></div></div><div class="profile-tabs">${[['curtidas','Músicas curtidas'],['reposts','Barras repostadas'],['comentarios','Comentários']].map(([k,t])=>`<button class="profile-tab ${listenerTabAtual===k?'active':''}" onclick="renderizarPerfilOuvinte('${k}')">${t}</button>`).join('')}</div><div id="listenerContent"></div></div>`;
     renderizarPerfilOuvinte(listenerTabAtual); document.getElementById('listenerOverlay').classList.add('open'); icones();
 }
 function renderizarPerfilOuvinte(tab){listenerTabAtual=tab;abrirPerfilOuvinteBase();}
@@ -5518,9 +5532,8 @@ async function entrarConta(){
             nome:usuarioAtual.user_metadata?.nome||email.split('@')[0]||'Ouvinte',
             avatar_url:usuarioAtual.user_metadata?.avatar_url||''
         };
-        // Fecha imediatamente a aba/modal de login após autenticação bem-sucedida.
-        // O carregamento do perfil e da biblioteca continua em segundo plano.
         fecharOverlay('authOverlay');
+        abrirPerfil();
 
         Promise.allSettled([
             carregarPerfilOuvinte(),
@@ -5538,10 +5551,20 @@ async function entrarConta(){
 }
 
 async function sairConta(){
-    if(db) await db.auth.signOut();
-    usuarioAtual=null; perfilOuvinte=null;
+    try{
+        if(db){
+            const {error}=await db.auth.signOut();
+            if(error) throw error;
+        }
+    }catch(e){
+        console.warn('Não foi possível encerrar a sessão no Supabase.',e);
+    }
+    usuarioAtual=null;
+    perfilOuvinte=null;
     fecharOverlay('authOverlay');
+    fecharOverlay('listenerOverlay');
     renderizarBiblioteca();
+    atualizarPerfilHeader();
 }
 
 async function sincronizarBibliotecaConta(){
