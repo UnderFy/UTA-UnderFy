@@ -1816,7 +1816,7 @@ MOBILE
 .listener-edit-actions button{flex:1;padding:11px;border-radius:11px;cursor:pointer;font-weight:800}
 .listener-save{background:var(--green);color:#050505}
 .listener-cancel{background:#1b1b1b;color:#fff;border:1px solid #303030}
-.pub-stats{display:flex;gap:10px;margin-top:10px;color:#777;font-size:10px}.guide-streams{color:#777}.guide-streams svg{width:12px;height:12px}
+.pub-stats{display:flex;gap:10px;margin-top:10px;color:#777;font-size:10px}
 .pub-stats span{display:inline-flex;align-items:center;gap:4px}
 .comment-feed{display:flex;flex-direction:column;gap:12px;margin-top:15px}
 .comment-publication{background:#111;border:1px solid #292929;border-radius:16px;padding:13px}
@@ -1885,6 +1885,8 @@ MOBILE
 .profile-share-btn:hover{color:#fff;background:#292929}
 @media(max-width:600px){#musicas .tracks .track{min-width:285px;flex-basis:285px}.project-card{min-width:185px;flex-basis:185px}.project-hero img{width:92px;height:92px}.project-hero h2{font-size:20px}}
 .library-content .tracks{display:flex;flex-direction:row;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px 1px 7px}.library-content .tracks::-webkit-scrollbar{display:none}.library-content .tracks .track{min-width:285px;flex:0 0 285px}.library-content .playlist-grid{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px 1px 7px}.library-content .playlist-grid::-webkit-scrollbar{display:none}.library-content .playlist-grid>*{min-width:190px;flex:0 0 190px}
+
+.story-save{position:absolute;top:16px;right:68px;z-index:6;padding:10px 13px;border-radius:12px;background:rgba(20,20,20,.78);color:#fff;border:1px solid #333;cursor:pointer;font-size:11px;font-weight:800;backdrop-filter:blur(8px)}
 </style>
 </head>
 
@@ -2685,6 +2687,7 @@ STORY VIEWER
 <div id="storyViewer" class="story-viewer" aria-hidden="true">
     <div id="storyProgress" class="story-progress"></div>
     <button class="story-close" onclick="fecharStories()"><i data-lucide="x"></i></button>
+    <button id="storySave" class="story-save" onclick="toggleSalvarStory()"><i data-lucide="bookmark"></i> Salvar</button>
     <div class="story-tap story-left" onclick="storyAnterior()"></div>
     <div class="story-tap story-right" onclick="storyProximo()"></div>
     <div class="story-content">
@@ -2825,10 +2828,7 @@ let musicaArtistas=[];
 let projetos=[];
 let projetoMusicas=[];
 let comentariosBarras=[];
-let contadoresSociais={artistas:{},musicasCurtidas:{},musicasStreams:{},barrasCurtidas:{},barrasReposts:{},barrasComentarios:{}};
-let streamSessaoAtual={musicaId:null,musica:null,acumulado:0,ultimoTempo:null,contado:false,contagemAtiva:false};
-let streamTimer=null;
-let streamSessaoId=null;
+let contadoresSociais={artistas:{},musicasCurtidas:{},barrasCurtidas:{},barrasReposts:{},barrasComentarios:{}};
 
 let indiceAtual=-1;
 
@@ -2853,7 +2853,8 @@ const STORAGE={
 
     historico:'underfy_historico',
 
-    playlists:'underfy_playlists'
+    playlists:'underfy_playlists',
+    storiesSalvos:'underfy_stories_salvos'
 
 };
 
@@ -4058,7 +4059,7 @@ function abrirProjeto(id){
     const mus=projetoMusicasLista(p), artista=projetoArtistaNome(p), aid=projetoArtistaId(p);
     el.innerHTML=`<div class="profile-body" style="padding-top:20px">
         <div class="project-hero"><img src="${esc(p.capa_url||p.capa||PH)}" onerror="this.src='${PH}'"><div style="min-width:0;flex:1"><h2>${esc(p.nome||p.titulo||'Projeto')}</h2><p>${esc(artista)} • ${mus.length} ${mus.length===1?'guia':'guias'}</p><div class="project-actions">${aid!=null?`<button onclick="abrirPerfilArtista('${esc(aid)}')"><i data-lucide="user-round"></i> Artista</button>`:''}<button class="project-main" onclick="compartilharProjeto(${JSON.stringify(p).replace(/"/g,'&quot;')})"><i data-lucide="share-2"></i> Compartilhar</button></div></div></div>
-        <div class="project-tracks">${mus.length?`<div class="tracks">${mus.map(m=>`<div class="track" onclick="tocarPorId('${esc(m.id)}')"><img class="cover" src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'"><div class="tinfo"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>${esc(artistasDaMusica(m))}</span></div><div class="pub-stats"><span class="guide-streams"><i data-lucide="play"></i> ${formatarNumero(obterStreamsMusica(m))}</span><span class="bar-stat-action" onclick="event.stopPropagation();compartilharGuia(${JSON.stringify(m).replace(/"/g,'&quot;')})"><i data-lucide="share-2"></i></span></div></div>`).join('')}</div>`:`<div class="empty">Nenhuma guia vinculada a este projeto.</div>`}</div>
+        <div class="project-tracks">${mus.length?`<div class="tracks">${mus.map(m=>`<div class="track" onclick="tocarPorId('${esc(m.id)}')"><img class="cover" src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'"><div class="tinfo"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>${esc(artistasDaMusica(m))}</span></div><div class="pub-stats"><span class="bar-stat-action" onclick="event.stopPropagation();compartilharGuia(${JSON.stringify(m).replace(/"/g,'&quot;')})"><i data-lucide="share-2"></i></span></div></div>`).join('')}</div>`:`<div class="empty">Nenhuma guia vinculada a este projeto.</div>`}</div>
     </div>`;
     document.getElementById('projectOverlay').classList.add('open'); icones();
 }
@@ -4104,7 +4105,7 @@ function renderizarMusicas(){
                 <span class="guide-like-sample ${liked?'active':''}" onclick="event.stopPropagation();curtirMusica(m)" title="${liked?'Descurtir':'Curtir'}">
                     <i data-lucide="heart"></i> ${formatarNumero(likesCount)}
                 </span>
-                <span class="guide-streams" title="Streams"><i data-lucide="play"></i> ${formatarNumero(obterStreamsMusica(m))}</span>
+                
                 <span class="bar-stat-action" onclick="event.stopPropagation();compartilharGuia(m)" title="Compartilhar"><i data-lucide="share-2"></i></span>
             </div>
         </div>`;
@@ -4136,7 +4137,7 @@ function carregarContadoresSociaisCache(){
             contadoresSociais={
                 artistas:c.artistas||{},
                 musicasCurtidas:c.musicasCurtidas||{},
-                musicasStreams:c.musicasStreams||{},
+                
                 barrasCurtidas:c.barrasCurtidas||{},
                 barrasReposts:c.barrasReposts||{},
                 barrasComentarios:c.barrasComentarios||{}
@@ -4166,7 +4167,7 @@ function renderizarParaVoce(){
         <img src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'">
         <b>${esc(m.titulo||m.nome||'Guia')}</b>
         <span>${esc(artistasDaMusica(m))}</span>
-        <div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span><span class="guide-streams" title="Streams"><i data-lucide="play"></i> ${formatarNumero(obterStreamsMusica(m))}</span></div>
+        <div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div>
     </div>`}).join(''):`<div class="empty">Ainda não há recomendações.</div>`;
     icones();
 }
@@ -4270,6 +4271,49 @@ function retomarStory(){
     storyTimer=setTimeout(storyProximo,remaining);
 }
 
+async function sincronizarStorySalvo(story, salvar=true){
+    if(!story?.id) return;
+    const lista=getStorage(STORAGE.storiesSalvos);
+    const id=String(story.id);
+    const existe=lista.some(x=>String(x.id)===id);
+    if(salvar && !existe) lista.unshift(story);
+    if(!salvar && existe) {
+        const nova=lista.filter(x=>String(x.id)!==id);
+        setStorage(STORAGE.storiesSalvos,nova);
+    } else setStorage(STORAGE.storiesSalvos,lista);
+    if(!db||!usuarioAtual) return;
+    try{
+        if(salvar){
+            await db.from('stories_salvos').upsert({ouvinte_id:usuarioAtual.id,story_id:story.id},{onConflict:'ouvinte_id,story_id'});
+        }else{
+            await db.from('stories_salvos').delete().eq('ouvinte_id',usuarioAtual.id).eq('story_id',story.id);
+        }
+    }catch(e){ console.warn('Stories salvos: sincronização indisponível.',e); }
+}
+function storySalvo(story){ return getStorage(STORAGE.storiesSalvos).some(x=>String(x.id)===String(story?.id)); }
+async function toggleSalvarStory(){
+    const st=window._storyList?.[storyIndex]; if(!st?.id) return;
+    const salvo=storySalvo(st);
+    await sincronizarStorySalvo(st,!salvo);
+    atualizarBotaoStorySalvar(st);
+}
+function atualizarBotaoStorySalvar(st){
+    const b=document.getElementById('storySave'); if(!b)return;
+    b.innerHTML=`<i data-lucide="bookmark"></i> ${storySalvo(st)?'Salvo':'Salvar'}`;
+    icones();
+}
+async function carregarStoriesSalvosConta(){
+    if(!db||!usuarioAtual)return;
+    try{
+        const {data,error}=await db.from('stories_salvos').select('story_id').eq('ouvinte_id',usuarioAtual.id);
+        if(error)return;
+        const ids=new Set((data||[]).map(x=>String(x.story_id)));
+        const locais=getStorage(STORAGE.storiesSalvos);
+        const remotos=stories.filter(x=>ids.has(String(x.id)));
+        setStorage(STORAGE.storiesSalvos,[...remotos,...locais.filter(x=>!ids.has(String(x.id)))]);
+    }catch(e){}
+}
+
 function renderStory(){
     clearTimeout(storyTimer);
     const list=window._storyList||[]; const st=list[storyIndex]; if(!st){fecharStories();return;}
@@ -4293,7 +4337,7 @@ function renderStory(){
     const progress=document.getElementById('storyProgress'); progress.innerHTML=list.map((_,i)=>`<span class="${i<storyIndex?'done':''}"><i></i></span>`).join('');
     storyStartedAt=Date.now(); storyDuration=Math.max(2500,Number(st.duracao_ms||st.duration_ms||5000));
     const active=progress.children[storyIndex]; if(active) setTimeout(()=>{active.querySelector('i').style.transition=`width ${storyDuration}ms linear`;active.querySelector('i').style.width='100%';},20);
-    storyTimer=setTimeout(storyProximo,storyDuration); icones();
+    storyTimer=setTimeout(storyProximo,storyDuration); atualizarBotaoStorySalvar(st); icones();
 }
 function storyProximo(){ if(storyIndex<(window._storyList?.length||0)-1){storyIndex++;renderStory();} else fecharStories(); }
 function storyAnterior(){ if(storyIndex>0){storyIndex--;renderStory();} }
@@ -4312,7 +4356,7 @@ function renderizarPerfilArtista(a,tab='guias'){
     let content='';
     if(tab==='barras') content=lista.length?`<div class="profile-bar-list">${lista.map(renderBarra).join('')}</div>`:`<div class="empty">Nenhuma Barra publicada.</div>`;
     else if(tab==='projetos') content=lista.length?`<div class="profile-grid">${lista.map(p=>`<div class="profile-tile" onclick="abrirProjeto('${esc(p.id)}')"><img src="${esc(p.capa_url||p.capa||PH)}" onerror="this.src='${PH}'"><b>${esc(p.nome||p.titulo||'Projeto')}</b><span>${projetoMusicasLista(p).length} ${projetoMusicasLista(p).length===1?'guia':'guias'}</span></div>`).join('')}</div>`:`<div class="empty">Nenhum projeto encontrado.</div>`;
-    else content=lista.length?`<div class="profile-grid">${lista.map(m=>`<div class="profile-tile" onclick="tocarPorId('${esc(m.id)}')"><img src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>Guia publicada</span><div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span><span class="guide-streams" title="Streams"><i data-lucide="play"></i> ${formatarNumero(obterStreamsMusica(m))}</span></div></div>`).join('')}</div>`:`<div class="empty">Nada publicado nesta aba.</div>`;
+    else content=lista.length?`<div class="profile-grid">${lista.map(m=>`<div class="profile-tile" onclick="tocarPorId('${esc(m.id)}')"><img src="${esc(m.capa_url||m.cover_url||PH)}" onerror="this.src='${PH}'"><b>${esc(m.titulo||m.nome||'Guia')}</b><span>Guia publicada</span><div class="pub-stats guide-samples"><span class="guide-like-sample ${getStorage(STORAGE.curtidas).some(x=>String(x.id)===String(m.id))?'active':''}" onclick="event.stopPropagation();curtirMusica(${JSON.stringify(m).replace(/"/g,'&quot;')})" title="Curtir"><i data-lucide="heart"></i> ${formatarNumero(contadoresSociais.musicasCurtidas[String(m.id)]||0)}</span></div></div>`).join('')}</div>`:`<div class="empty">Nada publicado nesta aba.</div>`;
     const following=seguido(a.id);
     const followers=contadoresSociais.artistas[String(a.id)]||0;
     document.getElementById('artistProfile').innerHTML=`<div class="profile-cover"></div><div class="profile-body">
@@ -4400,115 +4444,13 @@ function formatarNumero(n){
     return String(n);
 }
 
-function obterStreamsMusica(m){
-    const k=String(m?.id||'');
-    if(contadoresSociais.musicasStreams && Object.prototype.hasOwnProperty.call(contadoresSociais.musicasStreams,k)) return Number(contadoresSociais.musicasStreams[k])||0;
-    return Number(m?.streams ?? m?.stream_count ?? m?.streams_count ?? m?.plays ?? 0)||0;
-}
-
-function obterSessaoStream(){
-    if(streamSessaoId) return streamSessaoId;
-    try{
-        streamSessaoId=localStorage.getItem('underfy_stream_session_id')||'';
-        if(!streamSessaoId){
-            streamSessaoId=(crypto?.randomUUID?.()||('anon-'+Date.now()+'-'+Math.random().toString(36).slice(2)));
-            localStorage.setItem('underfy_stream_session_id',streamSessaoId);
-        }
-    }catch(e){ streamSessaoId='anon-'+Date.now()+'-'+Math.random().toString(36).slice(2); }
-    return streamSessaoId;
-}
-
-async function registrarStreamMusica(musica){
-    if(!musica?.id || !dbPublic) return false;
-
-    const registro={
-        musica_id:String(musica.id),
-        criado_em:new Date().toISOString(),
-        sessao_id:obterSessaoStream(),
-        ouvinte_id:usuarioAtual?.id||null
-    };
-
-    try{
-        // O stream é público para registro; não depende de login.
-        const r=await dbPublic
-            .from('musicas_streams')
-            .insert(registro);
-
-        if(r.error){
-            console.error('Erro ao registrar stream:',r.error,registro);
-            return false;
-        }
-
-        const k=String(musica.id);
-        contadoresSociais.musicasStreams[k]=(contadoresSociais.musicasStreams[k]||0)+1;
-        salvarContadoresSociais();
-        renderizarMusicas();
-        renderizarParaVoce();
-        if(artistaPerfilAtual) renderizarPerfilArtista(artistaPerfilAtual,'guias');
-        return true;
-    }catch(e){
-        console.error('Falha inesperada ao registrar stream:',e,registro);
-        return false;
-    }
-}
-
-function iniciarContagemStream(musica){
-    const id=String(musica?.id||'');
-    if(!id) return;
-    if(streamTimer){clearInterval(streamTimer);streamTimer=null;}
-    streamSessaoAtual={musicaId:id,musica:musica,acumulado:0,ultimoTempo:null,contado:false,contagemAtiva:false};
-}
-
-function processarTempoStream(audio){
-    const musica=streamSessaoAtual.musica;
-    const id=String(musica?.id||'');
-    if(!id || audio.paused || audio.seeking || streamSessaoAtual.musicaId!==id || streamSessaoAtual.contado) return;
-
-    const atual=Number(audio.currentTime)||0;
-    if(streamSessaoAtual.ultimoTempo===null){
-        streamSessaoAtual.ultimoTempo=atual;
-        return;
-    }
-
-    const delta=atual-streamSessaoAtual.ultimoTempo;
-    streamSessaoAtual.ultimoTempo=atual;
-
-    // Ignora retrocessos e saltos anormais (seek/troca de mídia).
-    if(delta<=0 || delta>5) return;
-
-    streamSessaoAtual.acumulado+=delta;
-
-    if(streamSessaoAtual.acumulado>=30){
-        streamSessaoAtual.contado=true;
-        streamSessaoAtual.contagemAtiva=false;
-        if(streamTimer){clearInterval(streamTimer);streamTimer=null;}
-        registrarStreamMusica(musica);
-    }
-}
-
-function iniciarTimerStream(){
-    const audio=document.getElementById('audio');
-    if(!audio || streamTimer || streamSessaoAtual.contado) return;
-    streamSessaoAtual.contagemAtiva=true;
-    streamSessaoAtual.ultimoTempo=Number(audio.currentTime)||0;
-    streamTimer=setInterval(()=>{
-        if(!audio.paused && !audio.seeking) processarTempoStream(audio);
-        else if(audio.paused) streamSessaoAtual.ultimoTempo=Number(audio.currentTime)||streamSessaoAtual.ultimoTempo;
-    },250);
-}
-
-function pararTimerStream(){
-    if(streamTimer){clearInterval(streamTimer);streamTimer=null;}
-    streamSessaoAtual.contagemAtiva=false;
-}
 
 async function carregarContadoresSociais(){
     if(!dbPublic) return;
     try{
-        const [f,l,ms,bl,br,bc]=await Promise.all([
+        const [f,l,bl,br,bc]=await Promise.all([
             dbPublic.from('artistas_seguidos').select('artista_id'),
             dbPublic.from('musicas_curtidas').select('musica_id'),
-            dbPublic.from('musicas_streams').select('musica_id'),
             dbPublic.from('barras_curtidas').select('barra_id'),
             dbPublic.from('barras_reposts').select('barra_id'),
             dbPublic.from('barras_comentarios').select('barra_id')
@@ -4523,10 +4465,6 @@ async function carregarContadoresSociais(){
         if(!l.error){
             const x={}; (l.data||[]).forEach(r=>{const k=String(r.musica_id);x[k]=(x[k]||0)+1;});
             contadoresSociais.musicasCurtidas=x;
-        }
-        if(!ms.error){
-            const x={}; (ms.data||[]).forEach(r=>{const k=String(r.musica_id);x[k]=(x[k]||0)+1;});
-            contadoresSociais.musicasStreams=x;
         }
         if(!bl.error){
             const x={}; (bl.data||[]).forEach(r=>{const k=String(r.barra_id);x[k]=(x[k]||0)+1;});
@@ -4669,7 +4607,6 @@ function tocarObjeto(m){
 
 
     audio.src=url;
-    iniciarContagemStream(m);
 
 
     document
@@ -5003,65 +4940,11 @@ document
         .textContent=
         tempo(this.duration);
 
-        processarTempoStream(this);
 
     }
 );
 
 
-document
-.getElementById('audio')
-.addEventListener('playing',function(){
-    iniciarTimerStream();
-});
-
-document
-.getElementById('audio')
-.addEventListener('pause',function(){
-    if(!streamSessaoAtual.contado) streamSessaoAtual.ultimoTempo=Number(this.currentTime)||streamSessaoAtual.ultimoTempo;
-    pararTimerStream();
-});
-
-document
-.getElementById('audio')
-.addEventListener('seeking',function(){
-    streamSessaoAtual.ultimoTempo=Number(this.currentTime)||0;
-});
-
-document
-.getElementById('audio')
-.addEventListener('ended',function(){
-    pararTimerStream();
-});
-
-document
-.getElementById('progressBar')
-.addEventListener(
-    'click',
-    function(e){
-
-        let audio=
-        document.getElementById('audio');
-
-
-        if(!audio.duration)
-            return;
-
-
-        let rect=
-        this.getBoundingClientRect();
-
-
-        let p=
-        (e.clientX-rect.left)/
-        rect.width;
-
-
-        audio.currentTime=
-        p*audio.duration;
-
-    }
-);
 
 
 document
@@ -5417,7 +5300,7 @@ async function iniciarAutenticacao(){
             renderizarBiblioteca();
             atualizarPerfilHeader();
             // Perfil completo em segundo plano.
-            carregarPerfilOuvinte().then(()=>{
+            Promise.allSettled([carregarPerfilOuvinte(),carregarStoriesSalvosConta()]).then(()=>{
                 renderizarBiblioteca();
                 atualizarPerfilHeader();
             }).catch(()=>{});
@@ -5435,7 +5318,7 @@ async function iniciarAutenticacao(){
             };
             renderizarBiblioteca();
             atualizarPerfilHeader();
-            Promise.resolve().then(()=>carregarPerfilOuvinte()).then(()=>{
+            Promise.allSettled([carregarPerfilOuvinte(),carregarStoriesSalvosConta()]).then(()=>{
                 renderizarBiblioteca();
                 atualizarPerfilHeader();
             }).catch(()=>{});
@@ -5558,7 +5441,8 @@ async function entrarConta(){
 
         Promise.allSettled([
             carregarPerfilOuvinte(),
-            sincronizarBibliotecaConta()
+            sincronizarBibliotecaConta(),
+            carregarStoriesSalvosConta()
         ]).then(()=>{
             renderizarBiblioteca();
             renderizarBarras();
@@ -5572,10 +5456,11 @@ async function entrarConta(){
 }
 
 async function sairConta(){
-    if(db) await db.auth.signOut();
+    try{ if(db) await db.auth.signOut(); }catch(e){ console.warn('Não foi possível encerrar a sessão no servidor.',e); }
     usuarioAtual=null; perfilOuvinte=null;
     fecharOverlay('authOverlay');
     renderizarBiblioteca();
+    atualizarPerfilHeader();
 }
 
 async function sincronizarPlaylistsLocais(){
