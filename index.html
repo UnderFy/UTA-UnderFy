@@ -3954,7 +3954,7 @@ async function carregarDadosUnderFy(){
         ['artistas',()=>dbPublic.from('artistas').select('*').order('nome',{ascending:true})],
         ['musicas',()=>dbPublic.from('musicas_ouvintes').select('*').order('created_at',{ascending:false}).limit(100)],
         ['musicaArtistas',()=>dbPublic.from('musica_artistas').select('*')],
-        ['projetos',()=>dbPublic.from('projetos').select('*').order('created_at',{ascending:false})],
+        ['projetos',()=>dbPublic.from('projetos').select('*').order('criado_em',{ascending:false})],
         ['projetoMusicas',()=>dbPublic.from('projeto_musicas').select('*')],
         ['barras',()=>dbPublic.from('barras').select('*').order('created_at',{ascending:false}).limit(50)],
         ['comentariosBarras',()=>dbPublic.from('barras_comentarios').select('*').order('created_at',{ascending:false}).limit(500)]
@@ -4069,7 +4069,7 @@ CARREGAR MÚSICAS
 
 async function carregarMusicas(){
     if(!dbPublic) return;
-    const r=await dbPublic.from('musicas_ouvintes').select('*').order('created_at',{ascending:false}).limit(100);
+    const r=await dbPublic.from('musicas_ouvintes').select('*').order('criado_em',{ascending:false}).limit(100);
     if(r.error){ console.error('Erro ao carregar músicas:',r.error); return; }
     musicas=r.data||[];
     if(!musicaArtistas.length){
