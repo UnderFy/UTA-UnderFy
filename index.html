@@ -274,11 +274,29 @@ function abrirProjeto(id){
   document.getElementById('projectOverlay').classList.add('open');icones();
 }
 function abrirStories(aid){
-  const a=artista(aid),ss=stories.filter(s=>String(artistIdVal(s))===String(aid));if(!ss.length)return;
-  document.getElementById('storyTitle').textContent=nameVal(a)||'Stories';
+  const ss=stories.filter(s=>String(artistIdVal(s))===String(aid));
+  if(!ss.length)return;
   let idx=0;
-  const draw=()=>{const s=ss[idx],media=storyMediaVal(s),isVideo=/\.(mp4|webm|mov)(\?|$)/i.test(media);document.getElementById('storyView').innerHTML=`<div class="story-view">${media?(isVideo?`<video src="${esc(safeUrl(media))}" controls autoplay playsinline></video>`:`<img src="${esc(safeUrl(media))}" onerror="this.src='${PH}'">`):`<div style="padding:50px;color:#aaa">Este Story não possui mídia pública.</div>`}<div class="story-caption">${esc(textVal(s))}<div style="margin-top:8px;color:#aaa;font-size:10px">${idx+1}/${ss.length}</div></div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="secondary" style="padding:10px 15px;border-radius:18px" onclick="${idx>0?'storyPrev()':'void(0)'}">Anterior</button><button class="primary" style="padding:10px 15px;border-radius:18px" onclick="${idx<ss.length-1?'storyNext()':'fechar(null,\\'storyOverlay\\')'}">Próximo</button></div>`};
-  window.storyPrev=()=>{if(idx>0){idx--;draw()}};window.storyNext=()=>{if(idx<ss.length-1){idx++;draw()}};draw();document.getElementById('storyOverlay').classList.add('open');icones();
+  const draw=()=>{
+    const s=ss[idx];
+    const media=storyMediaVal(s);
+    const isVideo=/\.(mp4|webm|mov)(\?|$)/i.test(media);
+    const mediaHtml=media
+      ? (isVideo
+        ? `<video src="${esc(safeUrl(media))}" controls autoplay playsinline></video>`
+        : `<img src="${esc(safeUrl(media))}" onerror="this.src='${PH}'">`)
+      : `<div style="padding:50px;color:#aaa">Este Story não possui mídia pública.</div>`;
+    const prev=idx>0 ? 'storyPrev()' : 'void(0)';
+    const next=idx<ss.length-1 ? 'storyNext()' : "fechar(null,'storyOverlay')";
+    document.getElementById('storyView').innerHTML=
+      `<div class="story-view">${mediaHtml}<div class="story-caption">${esc(textVal(s))}<div style="margin-top:8px;color:#aaa;font-size:10px">${idx+1}/${ss.length}</div></div></div>`+
+      `<div style="display:flex;gap:8px;margin-top:10px"><button class="secondary" style="padding:10px 15px;border-radius:18px" onclick="${prev}">Anterior</button><button class="primary" style="padding:10px 15px;border-radius:18px" onclick="${next}">Próximo</button></div>`;
+  };
+  window.storyPrev=()=>{if(idx>0){idx--;draw()}};
+  window.storyNext=()=>{if(idx<ss.length-1){idx++;draw()}};
+  draw();
+  document.getElementById('storyOverlay').classList.add('open');
+  icones();
 }
 async function carregarPerfil(){
   if(!usuario)return;
