@@ -1,345 +1,39 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#080808">
-<title>UnderFy • UTA</title>
-<link rel="icon" href="underfy-logo.png">
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080808"><title>Início • UnderFy UTA</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<style>
-:root{--bg:#080808;--card:#111;--card2:#171717;--line:#292929;--text:#fff;--muted:#888;--green:#9cff00;--red:#ff4d67}
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100vh;padding-bottom:82px}
-button,input,textarea{font:inherit}
-button{border:0}
-button,a{tap-highlight-color:transparent}
-img{user-select:none;-webkit-user-drag:none}
-.top{position:sticky;top:0;z-index:50;height:68px;padding:0 18px;background:rgba(8,8,8,.96);backdrop-filter:blur(18px);border-bottom:1px solid #191919;display:flex;align-items:center;justify-content:space-between}
-.logo{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-size:21px;font-weight:900}
-.logo img{width:34px;height:34px;border-radius:9px;object-fit:cover;background:#222}
-.fy{color:var(--green)}.dot{color:#777;margin:0 2px}
-.actions{display:flex;gap:8px}.icon{width:42px;height:42px;border-radius:50%;background:#191919;color:#fff;display:grid;place-items:center;cursor:pointer}
-main{width:min(1180px,100%);margin:auto;padding:18px 18px 40px}
-.hero{min-height:300px;border:1px solid var(--line);border-radius:26px;padding:30px 25px;display:flex;align-items:flex-end;background:radial-gradient(circle at 85% 15%,rgba(156,255,0,.2),transparent 25%),radial-gradient(circle at 70% 90%,rgba(0,229,255,.1),transparent 30%),linear-gradient(135deg,#1a1a1a,#0b0b0b 70%)}
-.eyebrow{color:var(--green);font-size:11px;letter-spacing:2.5px;font-weight:900}
-.hero h1{font-size:clamp(38px,7vw,66px);line-height:.92;letter-spacing:-3px;margin:10px 0 15px}
-.hero p{color:#aaa;max-width:620px;line-height:1.5;font-size:14px}
-.hero-actions{display:flex;gap:9px;margin-top:21px;flex-wrap:wrap}.hero-actions button{padding:13px 18px;border-radius:24px;font-weight:900;cursor:pointer}
-.primary{background:var(--green);color:#050505}.secondary{background:#222;color:#fff;border:1px solid #333}
-.section{margin-top:34px}.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.head h2{font-size:25px}.head button{background:none;color:#888;cursor:pointer;font-size:12px}
-.row{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none}.row::-webkit-scrollbar{display:none}
-.artist{min-width:145px;cursor:pointer}.artist img{width:145px;height:145px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:#161616}.artist b{display:block;margin-top:9px;font-size:14px}.artist small{display:block;color:#666;margin-top:4px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:11px;overflow:hidden}
-.music-cover{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#1b1b1b}.music-info{padding:10px 1px 2px}.music-info b,.music-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.music-info span{color:#777;font-size:11px;margin-top:4px}
-.card-actions{display:flex;gap:7px;margin-top:10px}.round{width:37px;height:37px;border-radius:50%;background:#202020;color:#aaa;display:grid;place-items:center;cursor:pointer}.round.active{color:var(--green)}.round.play{color:#fff}
-.project{display:flex;gap:12px;align-items:center;cursor:pointer}.project img{width:92px;height:92px;border-radius:12px;object-fit:cover;background:#1b1b1b}.project b{font-size:15px}.project span{display:block;color:#777;font-size:11px;margin-top:5px}
-.barra{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px}.btop{display:flex;align-items:center;gap:10px}.btop img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#222}.btop div{min-width:0}.btop b{display:block}.btop small{display:block;color:#666;margin-top:3px}.btext{margin-top:13px;line-height:1.5;color:#ddd;font-size:14px;white-space:pre-wrap}.bactions{display:flex;gap:8px;margin-top:13px}.bactions button{background:#1c1c1c;color:#aaa;padding:8px 10px;border-radius:18px;cursor:pointer;font-size:11px}.bactions button.active{color:var(--green)}.comments{display:none;margin-top:10px}.comments.open{display:block}.comments textarea{width:100%;min-height:70px;background:#0c0c0c;color:#fff;border:1px solid #333;border-radius:12px;padding:10px;resize:vertical}.comments button{margin-top:7px;background:var(--green);color:#050505;border-radius:18px;padding:8px 13px;font-weight:800}
-.stories{display:flex;gap:15px;overflow-x:auto;scrollbar-width:none}.stories::-webkit-scrollbar{display:none}.story{min-width:92px;text-align:center;cursor:pointer}.story-ring{width:78px;height:78px;margin:auto;border-radius:50%;padding:3px;background:linear-gradient(135deg,var(--green),#666)}.story-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#222;border:3px solid #080808}.story b{display:block;margin-top:7px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.story small{display:block;color:#666;margin-top:3px}
-.empty{border:1px dashed #303030;border-radius:16px;padding:24px 15px;color:#666;text-align:center;font-size:13px;width:100%}.loading{color:#666;padding:20px 0}
-.nav{position:fixed;z-index:60;left:0;right:0;bottom:0;height:70px;background:rgba(10,10,10,.98);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around}.nav button{background:none;color:#777;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:11px}.nav button.active{color:#fff}.nav i{width:23px;height:23px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100;display:none;align-items:flex-end;justify-content:center}.overlay.open{display:flex}.sheet{width:min(700px,100%);max-height:90vh;overflow:auto;background:#111;border:1px solid #333;border-bottom:0;border-radius:24px 24px 0 0;padding:20px}.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.close{background:#222;color:#fff;border-radius:50%;width:38px;height:38px;cursor:pointer}.field{display:block;margin:10px 0}.field span{display:block;color:#888;font-size:11px;margin-bottom:6px}.field input{width:100%;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:12px;padding:12px}.auth-btn{width:100%;padding:12px;border-radius:12px;background:var(--green);font-weight:900;cursor:pointer;margin-top:8px}.danger{background:#30151b!important;color:#ff7184!important}
-.search-result{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;cursor:pointer}.search-result:hover{background:#1a1a1a}.search-result img{width:48px;height:48px;border-radius:10px;object-fit:cover}.account{display:flex;align-items:center;gap:12px;margin-bottom:15px}.account img{width:60px;height:60px;border-radius:50%;object-fit:cover;background:#222}.account b{font-size:18px}.account span{display:block;color:#777;font-size:11px;margin-top:4px}
-.story-view{position:relative;min-height:70vh;display:grid;place-items:center;background:#050505;border-radius:18px;overflow:hidden}.story-view img,.story-view video{max-width:100%;max-height:70vh;object-fit:contain}.story-caption{position:absolute;left:15px;right:15px;bottom:15px;background:rgba(0,0,0,.6);padding:12px;border-radius:12px}
-@media(max-width:600px){main{padding:14px 12px 30px}.hero{min-height:280px;padding:25px 20px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.artist{min-width:125px}.artist img{width:125px;height:125px}.project img{width:78px;height:78px}}
-</style>
-</head>
-<body>
-<header class="top">
-<a class="logo" href="#" onclick="topo();return false"><img src="underfy-logo.png" onerror="this.style.display='none'"><span>Under<span class="fy">Fy</span></span><span class="dot">•</span><span>UTA</span></a>
-<div class="actions"><button class="icon" onclick="abrirBusca()"><i data-lucide="search"></i></button><button class="icon" onclick="abrirConta()"><i data-lucide="user-round"></i></button></div>
-</header>
-
-<main>
-<section class="hero">
-<div>
-<div class="eyebrow">UNDERFY • UTA</div>
-<h1>O underground<br>está aqui.</h1>
-<p>Artistas, músicas, Stories, projetos e Barras da cena independente. Tudo conectado ao seu banco Supabase.</p>
-<div class="hero-actions"><button class="primary" onclick="scrollToId('musicas')">Explorar músicas</button><button class="secondary" onclick="abrirBusca()">Buscar</button></div>
-</div>
-</section>
-
-<section class="section" id="storiesSection">
-<div class="head"><h2>Stories</h2><button onclick="carregarTudo()">Atualizar</button></div>
-<div id="stories" class="stories"><div class="loading">Carregando Stories...</div></div>
-</section>
-
-<section class="section" id="artistasSection">
-<div class="head"><h2>Artistas</h2><button onclick="carregarArtistas()">Atualizar</button></div>
-<div id="artistas" class="row"><div class="loading">Carregando artistas...</div></div>
-</section>
-
-<section class="section" id="musicas">
-<div class="head"><h2>Músicas</h2><button onclick="carregarMusicas()">Atualizar</button></div>
-<div id="musicasGrid" class="grid"><div class="loading">Carregando músicas...</div></div>
-</section>
-
-<section class="section" id="projetosSection">
-<div class="head"><h2>Projetos</h2><button onclick="carregarProjetos()">Atualizar</button></div>
-<div id="projetos" class="grid"><div class="loading">Carregando projetos...</div></div>
-</section>
-
-<section class="section" id="barrasSection">
-<div class="head"><h2>Barras</h2><button onclick="carregarBarras()">Atualizar</button></div>
-<div id="barras" class="grid"><div class="loading">Carregando Barras...</div></div>
-</section>
+<style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#080808;color:#fff;font-family:Arial,Helvetica,sans-serif;padding-bottom:82px}a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}button{border:0}.top{height:70px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(8,8,8,.96);backdrop-filter:blur(18px);border-bottom:1px solid #1c1c1c}.brand{display:flex;align-items:center;gap:8px;font-size:21px}.brand span:not(.mark){color:#9cff00}.brand b{color:#fff}.brand i{font-style:normal;color:#777}.mark{width:34px;height:34px;border-radius:9px;background:#222;display:grid;place-items:center;font-size:18px}.top nav{display:flex;gap:8px}.top nav a{padding:9px 12px;border-radius:18px;color:#888;font-size:12px}.top nav a.on,.top nav a:hover{background:#191919;color:#fff}.account-btn{background:#191919;color:#fff;border-radius:20px;padding:10px 13px;cursor:pointer;font-size:12px}.wrap{width:min(1100px,100%);margin:auto;padding:22px 18px 45px}.hero{border:1px solid #292929;border-radius:26px;padding:30px;min-height:230px;background:radial-gradient(circle at 85% 15%,rgba(156,255,0,.18),transparent 25%),linear-gradient(135deg,#1a1a1a,#0b0b0b)}.eyebrow{font-size:11px;letter-spacing:2px;color:#9cff00;font-weight:900}.hero h1{font-size:clamp(34px,7vw,62px);line-height:.95;margin:10px 0}.hero p{color:#999;max-width:650px;line-height:1.5}.section{margin-top:32px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.head h2{margin:0;font-size:25px}.refresh{background:none;color:#888;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.row{display:flex;gap:14px;overflow-x:auto}.card,.barra,.project{background:#111;border:1px solid #292929;border-radius:18px;padding:12px}.cover{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#191919}.info{padding:10px 1px 2px}.info b,.info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.info span{color:#777;font-size:11px;margin-top:4px}.actions{display:flex;gap:7px;margin-top:10px}.round,.btn{cursor:pointer;border-radius:20px;padding:9px 12px;background:#202020;color:#aaa}.round.active{color:#9cff00}.primary{background:#9cff00;color:#050505;font-weight:900}.danger{background:#35151b;color:#ff7184}.artist{min-width:140px;cursor:pointer}.artist img{width:140px;height:140px;border-radius:50%;object-fit:cover;background:#191919;border:1px solid #292929}.artist b{display:block;margin-top:8px}.artist small{color:#777}.project{display:flex;gap:12px;align-items:center;cursor:pointer}.project img{width:90px;height:90px;border-radius:12px;object-fit:cover;background:#191919}.project span{display:block;color:#777;font-size:11px;margin-top:4px}.barra .btop{display:flex;gap:10px;align-items:center}.barra .avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#222}.barra .text{margin-top:13px;color:#ddd;line-height:1.5;white-space:pre-wrap}.comments{margin-top:10px}.comments textarea{width:100%;min-height:70px;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:12px;padding:10px}.story{min-width:105px;text-align:center;cursor:pointer}.story-ring{width:82px;height:82px;margin:auto;padding:3px;border-radius:50%;background:linear-gradient(135deg,#9cff00,#666)}.story-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #080808;background:#222}.story b{display:block;margin-top:7px;font-size:12px}.story small{color:#777}.empty,.loading{border:1px dashed #303030;border-radius:16px;padding:24px;text-align:center;color:#666;width:100%}.status{color:#777;font-size:12px;margin:10px 0}.error{color:#ff7184}.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:none;align-items:flex-end}.overlay.open{display:flex}.panel{width:min(650px,100%);max-height:90vh;overflow:auto;background:#111;border:1px solid #333;border-radius:24px 24px 0 0;padding:20px;margin:auto auto 0}.panel-head{display:flex;justify-content:space-between;align-items:center}.panel-head button{width:36px;height:36px;border-radius:50%;background:#222;color:#fff}.panel label{display:block;color:#888;font-size:11px;margin-top:12px}.panel input{display:block;width:100%;margin-top:6px;background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:12px;color:#fff}.panel .btn{display:block;width:100%;margin-top:9px}.account{display:flex;gap:12px;align-items:center;margin:10px 0 18px}.account img{width:58px;height:58px;border-radius:50%;object-fit:cover;background:#222}.account small{display:block;color:#777;margin-top:4px}.msg{color:#ff7184;font-size:12px;min-height:18px;margin-top:8px}footer{position:fixed;bottom:0;left:0;right:0;height:70px;z-index:60;background:rgba(10,10,10,.98);border-top:1px solid #292929;display:flex;justify-content:space-around;align-items:center}footer a{color:#777;font-size:11px}footer a:hover{color:#fff}.detail{background:#111;border:1px solid #292929;border-radius:20px;padding:18px}.story-view{background:#050505;border-radius:18px;min-height:65vh;display:grid;place-items:center;position:relative;overflow:hidden}.story-view img,.story-view video{max-width:100%;max-height:65vh;object-fit:contain}.story-caption{position:absolute;bottom:14px;left:14px;right:14px;background:rgba(0,0,0,.65);padding:12px;border-radius:12px}@media(max-width:700px){.top nav{display:none}.wrap{padding:15px 12px 35px}.hero{padding:24px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.artist{min-width:115px}.artist img{width:115px;height:115px}.project img{width:76px;height:76px}}
+</style></head><body>
+<header class="top"><a class="brand" href="index.html"><span class="mark">💧</span><b>Under<span>Fy</span></b><i>•</i><b>UTA</b></a>
+<nav><a class="" href="musicas.html">Músicas</a><a class="" href="barras.html">Barras</a><a class="" href="stories.html">Stories</a><a class="" href="projetos.html">Projetos</a></nav>
+<button class="account-btn" onclick="openAccount()"><span data-account-name>Entrar</span> ◯</button></header>
+<main class="wrap">
+<section class="hero"><div class="eyebrow">UNDERFY • UTA</div><h1>O underground<br>está aqui.</h1>
+<p>Conteúdo independente sincronizado diretamente com o Supabase: artistas, músicas, Stories, projetos e Barras.</p>
+<div class="actions"><a class="btn primary" href="musicas.html">Explorar músicas</a><a class="btn" href="stories.html">Ver Stories</a></div></section>
+<section class="section"><div class="head"><h2>Artistas</h2><button class="refresh" onclick="loadHome()">Atualizar</button></div><div id="artists" class="row"><div class="loading">Carregando artistas...</div></div></section>
+<section class="section"><div class="head"><h2>Acesso rápido</h2></div><div class="grid">
+<a class="card" href="musicas.html"><h3>Músicas</h3><p style="color:#777">Guias de músicas do banco.</p></a>
+<a class="card" href="barras.html"><h3>Barras</h3><p style="color:#777">Publicações e interações.</p></a>
+<a class="card" href="stories.html"><h3>Stories</h3><p style="color:#777">Stories ativos do banco.</p></a>
+<a class="card" href="projetos.html"><h3>Projetos</h3><p style="color:#777">Projetos e suas músicas.</p></a>
+</div></section>
+<div id="homeStatus" class="status"></div>
 </main>
-
-<nav class="nav">
-<button class="active" onclick="topo()"><i data-lucide="house"></i><span>Início</span></button>
-<button onclick="abrirBusca()"><i data-lucide="search"></i><span>Buscar</span></button>
-<button onclick="scrollToId('musicas')"><i data-lucide="music-2"></i><span>Músicas</span></button>
-<button onclick="abrirConta()"><i data-lucide="user-round"></i><span>Perfil</span></button>
-</nav>
-
-<div id="searchOverlay" class="overlay" onclick="fechar(event,'searchOverlay')"><div class="sheet" onclick="event.stopPropagation()"><div class="sheet-head"><h2>Buscar</h2><button class="close" onclick="fechar(null,'searchOverlay')">×</button></div><input id="searchInput" class="field" style="width:100%;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:12px;padding:13px" placeholder="Artista ou música..." oninput="pesquisar(this.value)"><div id="searchResults" style="margin-top:12px"></div></div></div>
-
-<div id="accountOverlay" class="overlay" onclick="fechar(event,'accountOverlay')"><div class="sheet" onclick="event.stopPropagation()"><div class="sheet-head"><h2>Conta</h2><button class="close" onclick="fechar(null,'accountOverlay')">×</button></div><div id="accountView"></div></div></div>
-
-<div id="storyOverlay" class="overlay" onclick="fechar(event,'storyOverlay')"><div class="sheet" onclick="event.stopPropagation()"><div class="sheet-head"><h2 id="storyTitle">Stories</h2><button class="close" onclick="fechar(null,'storyOverlay')">×</button></div><div id="storyView"></div></div></div>
-
-<div id="projectOverlay" class="overlay" onclick="fechar(event,'projectOverlay')"><div class="sheet" onclick="event.stopPropagation()"><div class="sheet-head"><h2 id="projectTitle">Projeto</h2><button class="close" onclick="fechar(null,'projectOverlay')">×</button></div><div id="projectView"></div></div></div>
-
-<div id="artistOverlay" class="overlay" onclick="fechar(event,'artistOverlay')"><div class="sheet" onclick="event.stopPropagation()"><div class="sheet-head"><h2 id="artistTitle">Artista</h2><button class="close" onclick="fechar(null,'artistOverlay')">×</button></div><div id="artistView"></div></div></div>
-
+<footer><a href="index.html">Início</a><a href="musicas.html">Músicas</a><a href="barras.html">Barras</a><a href="stories.html">Stories</a><a href="projetos.html">Projetos</a></footer>
+<div id="accountOverlay" class="overlay" onclick="if(event.target===this)closeAccount()"><div class="panel"><div class="panel-head"><h2>Conta</h2><button onclick="closeAccount()">×</button></div><div id="accountPanel"></div></div></div>
+<script src="underfy.js"></script>
 <script>
-const SUPABASE_URL="https://gnibzbnypirjrcaoibkx.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_b9yvSbmWOLVJvq4AB4CLmQ_VRuzpG5T";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-const pub=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
-let usuario=null,perfil=null;
-let artistas=[],musicas=[],musicaArtistas=[],projetos=[],projetoMusicas=[],barras=[],stories=[];
-let social={follows:[],musicLikes:[],musicSaves:[],barLikes:[],barReposts:[]};
-const PH='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><rect width="300" height="300" fill="#191919"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#666" font-size="28" font-family="Arial">UnderFy</text></svg>');
-const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-const key=(p,...names)=>{for(const n of names)if(p?.[n]!=null&&String(p[n]).trim()!=='')return p[n];return ''};
-const dateVal=p=>key(p,'created_at','criado_em','publicado_em','data_criacao','data_publicacao');
-const audioVal=p=>key(p,'audio_url','arquivo_url','mp3_url','musica_url','url_audio','audio','url','link_audio');
-const imageVal=p=>key(p,'capa_url','cover_url','foto_url','imagem_url','image_url','avatar_url','capa','foto');
-const nameVal=p=>key(p,'nome','titulo','name','title');
-const artistIdVal=p=>key(p,'artista_id','artist_id','usuario_artista_id');
-const storyMediaVal=p=>key(p,'media_url','video_url','imagem_url','image_url','foto_url','url','arquivo_url');
-const textVal=p=>key(p,'texto','conteudo','content','descricao','description','mensagem','texto_barras');
-function icones(){try{lucide.createIcons()}catch(e){}}
-function topo(){window.scrollTo({top:0,behavior:'smooth'})}
-function scrollToId(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
-function abrirBusca(){document.getElementById('searchOverlay').classList.add('open');setTimeout(()=>document.getElementById('searchInput')?.focus(),100)}
-function fechar(e,id){if(e&&e.target!==e.currentTarget)return;document.getElementById(id).classList.remove('open')}
-function safeUrl(v){try{new URL(v,location.href);return v}catch{return PH}}
-function sortNewest(a,b){const da=Date.parse(dateVal(a))||0,db=Date.parse(dateVal(b))||0;return db-da}
-function sortName(a,b){return String(nameVal(a)).localeCompare(String(nameVal(b)),'pt-BR')}
-function getLS(k,d=[]){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))||d}catch{return d}}
-function setLS(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-function carregarCacheSocial(){social.follows=getLS('uf_follows');social.musicLikes=getLS('uf_music_likes');social.musicSaves=getLS('uf_music_saves');social.barLikes=getLS('uf_bar_likes');social.barReposts=getLS('uf_bar_reposts')}
-function salvarSocial(){for(const k of Object.keys(social))setLS('uf_'+k,social[k])}
-carregarCacheSocial();
-
-async function queryPublic(table,orderField=null,limit=200){
-  let r=await pub.from(table).select('*').limit(limit);
-  if(orderField && r.error==null){/* ordem local: não dependemos de colunas de data */}
-  return r;
+let artists=[];
+async function loadHome(){
+  const r=await readPublic("artistas",300);
+  if(r.error){setStatus("homeStatus","Erro ao consultar artistas: "+r.error.message,true);return;}
+  artists=(r.data||[]).sort(sortName);
+  const el=document.getElementById("artists");
+  el.innerHTML=artists.length?artists.map(a=>`<a class="artist" href="musicas.html?artista=${encodeURIComponent(a.id)}"><img src="${esc(safeUrl(imageOf(a)||PH))}" onerror="this.src='${PH}'"><b>${esc(nameOf(a)||"Artista")}</b><small>Artista UnderFy</small></a>`).join(""):`<div class="empty">Nenhum artista encontrado.</div>`;
+  setStatus("homeStatus",`${artists.length} artista(s) sincronizado(s) com o Supabase.`);
 }
-async function carregarTudo(){
-  await Promise.allSettled([carregarArtistas(),carregarMusicas(),carregarProjetos(),carregarBarras(),carregarStories()]);
-  renderAll(); icones();
-}
-async function carregarArtistas(){
-  const r=await queryPublic('artistas',null,200);
-  if(!r.error)artistas=(r.data||[]).sort(sortName);
-  else console.warn('artistas',r.error);
-}
-async function carregarMusicas(){
-  const [r,rel]=await Promise.all([queryPublic('musicas_ouvintes',null,200),queryPublic('musica_artistas',null,500)]);
-  if(!r.error)musicas=(r.data||[]).sort(sortNewest);
-  else console.warn('musicas_ouvintes',r.error);
-  if(!rel.error)musicaArtistas=rel.data||[];
-}
-async function carregarProjetos(){
-  const [r,rel]=await Promise.all([queryPublic('projetos',null,100),queryPublic('projeto_musicas',null,500)]);
-  if(!r.error)projetos=(r.data||[]).sort(sortNewest);
-  else console.warn('projetos',r.error);
-  if(!rel.error)projetoMusicas=rel.data||[];
-}
-async function carregarBarras(){
-  const r=await queryPublic('barras',null,100);
-  if(!r.error)barras=(r.data||[]).sort(sortNewest);
-  else console.warn('barras',r.error);
-}
-async function carregarStories(){
-  const r=await queryPublic('stories',null,100);
-  if(!r.error){
-    const now=Date.now();
-    stories=(r.data||[]).filter(s=>{
-      const d=Date.parse(dateVal(s)); return !d || now-d<=86400000;
-    }).sort(sortNewest);
-  }else console.warn('stories',r.error);
-}
-function artista(id){return artistas.find(a=>String(a.id)===String(id))}
-function artistaNome(id){return nameVal(artista(id))||'Artista UnderFy'}
-function artistasDaMusica(m){
-  const rel=musicaArtistas.filter(x=>String(x.musica_id)===String(m.id));
-  const nomes=rel.map(x=>artistaNome(x.artista_id)).filter(x=>x!=='Artista UnderFy');
-  return nomes.length?nomes.join(' feat. '):artistaNome(artistIdVal(m));
-}
-function renderAll(){renderArtistas();renderMusicas();renderProjetos();renderBarras();renderStories()}
-function renderArtistas(){
-  const el=document.getElementById('artistas');if(!el)return;
-  el.innerHTML=artistas.length?artistas.map(a=>`<div class="artist" onclick="abrirArtista('${esc(a.id)}')"><img src="${esc(safeUrl(imageVal(a)||PH))}" onerror="this.src='${PH}'"><b>${esc(nameVal(a)||'Artista')}</b><small>${social.follows.map(String).includes(String(a.id))?'Seguindo':'Artista'}</small></div>`).join(''):'<div class="empty">Nenhum artista disponível.</div>';
-  icones();
-}
-function musicCard(m){
-  const id=String(m.id),liked=social.musicLikes.map(String).includes(id),saved=social.musicSaves.map(String).includes(id),aid=artistIdVal(m);
-  return `<article class="card"><img class="music-cover" src="${esc(safeUrl(imageVal(m)||PH))}" onerror="this.src='${PH}'"><div class="music-info"><b>${esc(nameVal(m)||'Guia')}</b><span>${esc(artistasDaMusica(m))}</span></div><div class="card-actions"><button class="round play" onclick="tocar('${esc(id)}')" title="Ouvir"><i data-lucide="play"></i></button><button class="round ${liked?'active':''}" onclick="toggleMusicLike('${esc(id)}')" title="Curtir"><i data-lucide="heart"></i></button><button class="round ${saved?'active':''}" onclick="toggleMusicSave('${esc(id)}')" title="Salvar"><i data-lucide="bookmark"></i></button><button class="round" onclick="compartilhar('musica',${JSON.stringify(m).replace(/</g,'\\u003c')})" title="Compartilhar"><i data-lucide="share-2"></i></button></div></article>`;
-}
-function renderMusicas(){
-  const el=document.getElementById('musicasGrid');if(!el)return;
-  el.innerHTML=musicas.length?musicas.slice(0,100).map(musicCard).join(''):'<div class="empty">Nenhuma música encontrada.</div>';icones();
-}
-function renderProjetos(){
-  const el=document.getElementById('projetos');if(!el)return;
-  el.innerHTML=projetos.length?projetos.map(p=>{const mids=projetoMusicas.filter(x=>String(x.projeto_id)===String(p.id)).map(x=>String(x.musica_id));const mus=mids.map(id=>musicas.find(m=>String(m.id)===id)).filter(Boolean);const aid=key(p,'artista_id','artist_id');const ar=aid?artistaNome(aid):(mus[0]?artistasDaMusica(mus[0]):'Artista UnderFy');return `<article class="card project" onclick="abrirProjeto('${esc(p.id)}')"><img src="${esc(safeUrl(imageVal(p)||PH))}" onerror="this.src='${PH}'"><div><b>${esc(nameVal(p)||'Projeto')}</b><span>${esc(ar)}</span><span>${mus.length} ${mus.length===1?'guia':'guias'}</span></div></article>`}).join(''):'<div class="empty">Nenhum projeto encontrado.</div>';
-}
-function renderBarras(){
-  const el=document.getElementById('barras');if(!el)return;
-  el.innerHTML=barras.length?barras.map(b=>{const aid=artistIdVal(b),a=artista(aid);const id=String(b.id),lk=social.barLikes.map(String).includes(id),rp=social.barReposts.map(String).includes(id);return `<article class="barra"><div class="btop"><img src="${esc(safeUrl(imageVal(a)||imageVal(b)||PH))}" onerror="this.src='${PH}'"><div><b>${esc(nameVal(a)||key(b,'artista_nome','autor_nome')||'Artista')}</b><small>Barras</small></div></div><div class="btext">${esc(textVal(b)||'')}</div><div class="bactions"><button class="${lk?'active':''}" onclick="toggleBarLike('${esc(id)}')"><i data-lucide="heart"></i> Curtir</button><button class="${rp?'active':''}" onclick="toggleBarRepost('${esc(id)}')"><i data-lucide="repeat-2"></i> Repostar</button><button onclick="toggleComments('${esc(id)}')"><i data-lucide="message-circle"></i> Comentar</button><button onclick="compartilhar('barra',${JSON.stringify(b).replace(/</g,'\\u003c')})"><i data-lucide="share-2"></i></button></div><div id="comments-${esc(id)}" class="comments"><textarea id="comment-${esc(id)}" placeholder="Escreva um comentário..."></textarea><button onclick="enviarComentario('${esc(id)}')">Enviar comentário</button></div></article>`}).join(''):'<div class="empty">Nenhuma Barra encontrada.</div>';icones();
-}
-function renderStories(){
-  const el=document.getElementById('stories');if(!el)return;
-  const groups={};stories.forEach(s=>{const aid=artistIdVal(s);if(aid!=null)(groups[aid]??=[]).push(s)});
-  const ids=Object.keys(groups);
-  el.innerHTML=ids.length?ids.map(aid=>{const a=artista(aid),g=groups[aid];return `<div class="story" onclick="abrirStories('${esc(aid)}')"><div class="story-ring"><img src="${esc(safeUrl(imageVal(a)||imageVal(g[0])||PH))}" onerror="this.src='${PH}'"></div><b>${esc(nameVal(a)||key(g[0],'artista_nome')||'Artista')}</b><small>${g.length} ${g.length===1?'Story':'Stories'}</small></div>`}).join(''):'<div class="empty">Nenhum Story publicado nas últimas 24 horas.</div>';icones();
-}
-function tocar(id){
-  const m=musicas.find(x=>String(x.id)===String(id));if(!m)return;
-  const url=audioVal(m);if(!url){alert('Esta música não possui um endereço de áudio disponível no banco.');return}
-  let old=document.getElementById('ufAudio');if(old)old.remove();
-  const a=document.createElement('audio');a.id='ufAudio';a.src=url;a.controls=true;a.autoplay=true;a.style.position='fixed';a.style.left='12px';a.style.right='12px';a.style.bottom='78px';a.style.zIndex='70';document.body.appendChild(a);
-  a.onended=()=>a.remove();
-}
-async function toggleMusicLike(id){
-  const i=social.musicLikes.findIndex(x=>String(x)===String(id));if(i>=0)social.musicLikes.splice(i,1);else social.musicLikes.push(id);salvarSocial();renderMusicas();
-  if(usuario)await syncRow('musicas_curtidas',{ouvinte_id:usuario.id,musica_id:id},i<0);
-}
-async function toggleMusicSave(id){
-  const i=social.musicSaves.findIndex(x=>String(x)===String(id));if(i>=0)social.musicSaves.splice(i,1);else social.musicSaves.push(id);salvarSocial();renderMusicas();
-  if(usuario)await syncRow('musicas_salvas',{ouvinte_id:usuario.id,musica_id:id},i<0);
-}
-async function toggleBarLike(id){
-  const i=social.barLikes.findIndex(x=>String(x)===String(id));if(i>=0)social.barLikes.splice(i,1);else social.barLikes.push(id);salvarSocial();renderBarras();
-  if(usuario)await syncRow('barras_curtidas',{ouvinte_id:usuario.id,barra_id:id},i<0);
-}
-async function toggleBarRepost(id){
-  const i=social.barReposts.findIndex(x=>String(x)===String(id));if(i>=0)social.barReposts.splice(i,1);else social.barReposts.push(id);salvarSocial();renderBarras();
-  if(usuario)await syncRow('barras_reposts',{ouvinte_id:usuario.id,barra_id:id},i<0);
-}
-async function syncRow(table,row,add){
-  try{if(add)await sb.from(table).upsert(row,{onConflict:Object.keys(row).filter(k=>k!=='ouvinte_id').length?'ouvinte_id,'+Object.keys(row).filter(k=>k!=='ouvinte_id')[0]:undefined});else{let q=sb.from(table).delete().eq('ouvinte_id',row.ouvinte_id);for(const k of Object.keys(row).filter(k=>k!=='ouvinte_id'))q=q.eq(k,row[k]);await q}}catch(e){console.warn(table,e)}
-}
-function toggleComments(id){document.getElementById('comments-'+id)?.classList.toggle('open')}
-async function enviarComentario(id){
-  if(!usuario){abrirConta();return}
-  const ta=document.getElementById('comment-'+id),texto=ta?.value.trim();if(!texto)return;
-  const r=await sb.from('barras_comentarios').insert({barra_id:id,ouvinte_id:usuario.id,texto});
-  if(r.error)alert('Não foi possível publicar o comentário.');else{ta.value='';alert('Comentário publicado.')}
-}
-async function compartilhar(tipo,obj){
-  const titulo=nameVal(obj)||tipo;
-  const url=location.href.split('#')[0]+'#'+tipo+'-'+obj.id;
-  try{if(navigator.share)await navigator.share({title:'UnderFy • UTA',text:titulo,url});else await navigator.clipboard.writeText(url);alert('Link copiado.')}catch(e){}
-}
-function pesquisar(q){
-  q=q.trim().toLowerCase();const el=document.getElementById('searchResults');if(!q){el.innerHTML='';return}
-  const aa=artistas.filter(a=>String(nameVal(a)).toLowerCase().includes(q)).slice(0,8),mm=musicas.filter(m=>String(nameVal(m)).toLowerCase().includes(q)||artistasDaMusica(m).toLowerCase().includes(q)).slice(0,12);
-  el.innerHTML=(aa.map(a=>`<div class="search-result" onclick="fechar(null,'searchOverlay');abrirArtista('${esc(a.id)}')"><img src="${esc(safeUrl(imageVal(a)||PH))}"><div><b>${esc(nameVal(a)||'Artista')}</b><small style="display:block;color:#777;margin-top:3px">Artista</small></div></div>`).join(''))+(mm.map(m=>`<div class="search-result" onclick="fechar(null,'searchOverlay');tocar('${esc(m.id)}')"><img src="${esc(safeUrl(imageVal(m)||PH))}"><div><b>${esc(nameVal(m)||'Guia')}</b><small style="display:block;color:#777;margin-top:3px">${esc(artistasDaMusica(m))}</small></div></div>`).join(''))||'<div class="empty">Nenhum resultado.</div>';
-}
-function abrirArtista(id){
-  const a=artista(id);if(!a)return;document.getElementById('artistTitle').textContent=nameVal(a)||'Artista';
-  const ms=musicas.filter(m=>String(artistIdVal(m))===String(id)||musicaArtistas.some(r=>String(r.musica_id)===String(m.id)&&String(r.artista_id)===String(id)));
-  const seguindo=social.follows.map(String).includes(String(id));
-  document.getElementById('artistView').innerHTML=`<div class="account"><img src="${esc(safeUrl(imageVal(a)||PH))}" onerror="this.src='${PH}'"><div><b>${esc(nameVal(a)||'Artista')}</b><span>Artista UnderFy</span></div></div><button class="auth-btn" onclick="toggleFollow('${esc(id)}')">${seguindo?'Deixar de seguir':'Seguir artista'}</button><div class="section"><div class="head"><h2>Guias</h2></div><div class="grid">${ms.length?ms.map(musicCard).join(''):'<div class="empty">Nenhuma guia encontrada.</div>'}</div></div>`;
-  document.getElementById('artistOverlay').classList.add('open');icones();
-}
-async function toggleFollow(id){
-  const i=social.follows.findIndex(x=>String(x)===String(id));if(i>=0)social.follows.splice(i,1);else social.follows.push(id);salvarSocial();renderArtistas();abrirArtista(id);
-  if(usuario)await syncRow('artistas_seguidos',{ouvinte_id:usuario.id,artista_id:id},i<0);
-}
-function abrirProjeto(id){
-  const p=projetos.find(x=>String(x.id)===String(id));if(!p)return;document.getElementById('projectTitle').textContent=nameVal(p)||'Projeto';
-  const ids=projetoMusicas.filter(x=>String(x.projeto_id)===String(id)).map(x=>String(x.musica_id)),ms=ids.map(x=>musicas.find(m=>String(m.id)===x)).filter(Boolean);
-  document.getElementById('projectView').innerHTML=`<img style="width:100%;max-height:280px;object-fit:cover;border-radius:15px;background:#191919" src="${esc(safeUrl(imageVal(p)||PH))}" onerror="this.src='${PH}'"><div style="margin-top:13px"><h2>${esc(nameVal(p)||'Projeto')}</h2><p style="color:#777;margin-top:5px">${esc(ms.length)} ${ms.length===1?'guia':'guias'}</p></div><div class="section"><div class="grid">${ms.length?ms.map(musicCard).join(''):'<div class="empty">Nenhuma guia vinculada.</div>'}</div></div>`;
-  document.getElementById('projectOverlay').classList.add('open');icones();
-}
-function abrirStories(aid){
-  const ss=stories.filter(s=>String(artistIdVal(s))===String(aid));
-  if(!ss.length)return;
-  let idx=0;
-  const draw=()=>{
-    const s=ss[idx];
-    const media=storyMediaVal(s);
-    const isVideo=/\.(mp4|webm|mov)(\?|$)/i.test(media);
-    const mediaHtml=media
-      ? (isVideo
-        ? `<video src="${esc(safeUrl(media))}" controls autoplay playsinline></video>`
-        : `<img src="${esc(safeUrl(media))}" onerror="this.src='${PH}'">`)
-      : `<div style="padding:50px;color:#aaa">Este Story não possui mídia pública.</div>`;
-    const prev=idx>0 ? 'storyPrev()' : 'void(0)';
-    const next=idx<ss.length-1 ? 'storyNext()' : "fechar(null,'storyOverlay')";
-    document.getElementById('storyView').innerHTML=
-      `<div class="story-view">${mediaHtml}<div class="story-caption">${esc(textVal(s))}<div style="margin-top:8px;color:#aaa;font-size:10px">${idx+1}/${ss.length}</div></div></div>`+
-      `<div style="display:flex;gap:8px;margin-top:10px"><button class="secondary" style="padding:10px 15px;border-radius:18px" onclick="${prev}">Anterior</button><button class="primary" style="padding:10px 15px;border-radius:18px" onclick="${next}">Próximo</button></div>`;
-  };
-  window.storyPrev=()=>{if(idx>0){idx--;draw()}};
-  window.storyNext=()=>{if(idx<ss.length-1){idx++;draw()}};
-  draw();
-  document.getElementById('storyOverlay').classList.add('open');
-  icones();
-}
-async function carregarPerfil(){
-  if(!usuario)return;
-  try{const r=await sb.from('perfis_ouvintes').select('*').eq('id',usuario.id).maybeSingle();if(!r.error&&r.data)perfil=r.data}catch(e){}
-  try{
-    const [f,l,s]=await Promise.all([
-      sb.from('artistas_seguidos').select('artista_id').eq('ouvinte_id',usuario.id),
-      sb.from('musicas_curtidas').select('musica_id').eq('ouvinte_id',usuario.id),
-      sb.from('musicas_salvas').select('musica_id').eq('ouvinte_id',usuario.id)
-    ]);
-    if(!f.error)social.follows=(f.data||[]).map(x=>String(x.artista_id));
-    if(!l.error)social.musicLikes=(l.data||[]).map(x=>String(x.musica_id));
-    if(!s.error)social.musicSaves=(s.data||[]).map(x=>String(x.musica_id));
-    salvarSocial();
-  }catch(e){}
-}
-function abrirConta(){
-  const el=document.getElementById('accountView');
-  if(usuario){
-    const nome=nameVal(perfil)||usuario.user_metadata?.nome||usuario.email?.split('@')[0]||'Ouvinte';
-    const av=imageVal(perfil)||usuario.user_metadata?.avatar_url||PH;
-    el.innerHTML=`<div class="account"><img src="${esc(safeUrl(av))}" onerror="this.src='${PH}'"><div><b>${esc(nome)}</b><span>${esc(usuario.email||'')}</span></div></div><button class="auth-btn" onclick="abrirBibliotecaLocal()">Músicas salvas: ${social.musicSaves.length}</button><button class="auth-btn danger" onclick="sairConta()">Sair da conta</button>`;
-  }else{
-    el.innerHTML=`<h2>Entrar no UnderFy</h2><p style="color:#777;margin:7px 0 15px">Entre para sincronizar suas ações com sua conta.</p><label class="field"><span>E-mail</span><input id="email" type="email" autocomplete="email"></label><label class="field"><span>Senha</span><input id="senha" type="password" autocomplete="current-password"></label><div id="authMsg" style="color:#ff7184;font-size:12px;min-height:18px"></div><button class="auth-btn" onclick="entrar()">Entrar</button><button class="auth-btn secondary" onclick="cadastrar()">Criar conta</button>`;
-  }
-  document.getElementById('accountOverlay').classList.add('open');icones();
-}
-function abrirBibliotecaLocal(){
-  const ms=musicas.filter(m=>social.musicSaves.map(String).includes(String(m.id)));document.getElementById('accountView').innerHTML=`<div class="sheet-head"><h2>Salvos</h2><button class="close" onclick="abrirConta()">×</button></div><div class="grid">${ms.length?ms.map(musicCard).join(''):'<div class="empty">Nenhuma música salva.</div>'}</div>`;icones();
-}
-async function entrar(){
-  const email=document.getElementById('email')?.value.trim(),senha=document.getElementById('senha')?.value||'';if(!email||!senha)return;
-  const r=await sb.auth.signInWithPassword({email,password:senha});if(r.error){document.getElementById('authMsg').textContent=r.error.message;return}
-  usuario=r.data.user;await carregarPerfil();abrirConta();renderAll();
-}
-async function cadastrar(){
-  const email=document.getElementById('email')?.value.trim(),senha=document.getElementById('senha')?.value||'';if(!email||senha.length<6){document.getElementById('authMsg').textContent='Use e-mail e senha com pelo menos 6 caracteres.';return}
-  const r=await sb.auth.signUp({email,password:senha});if(r.error)document.getElementById('authMsg').textContent=r.error.message;else document.getElementById('authMsg').textContent='Conta criada. Confirme seu e-mail se necessário.';
-}
-async function sairConta(){await sb.auth.signOut();usuario=null;perfil=null;social={follows:[],musicLikes:[],musicSaves:[],barLikes:[],barReposts:[]};carregarCacheSocial();fechar(null,'accountOverlay');renderAll()}
-sb.auth.getSession().then(async r=>{usuario=r.data?.session?.user||null;if(usuario)await carregarPerfil();renderAll()});
-sb.auth.onAuthStateChange((_e,s)=>{usuario=s?.user||null;if(usuario)carregarPerfil().then(renderAll)})
-carregarTudo();
+(async()=>{await bootShared();await loadHome();})();
 </script>
-</body>
-</html>
+</body></html>
